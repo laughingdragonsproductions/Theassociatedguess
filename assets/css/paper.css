@@ -424,9 +424,41 @@ img {
 }
 
 .page-static {
-  max-width: var(--max);
+  max-width: 42rem;
   margin: 0 auto;
   padding: 2rem 1rem;
+}
+
+.page-static h1 {
+  font-family: var(--serif);
+  font-size: 2rem;
+  margin: 0 0 1.25rem;
+}
+
+.page-static p {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  line-height: 1.65;
+  margin: 0 0 1rem;
+}
+
+.page-static .about-lede {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.page-static .about-signature {
+  margin-top: 2rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.footer-tagline {
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin: 0.35rem 0;
 }
 
 .site-footer {
