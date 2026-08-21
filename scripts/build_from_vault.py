@@ -65,8 +65,15 @@ def escape(text: str) -> str:
 
 def article_href(slug: str, depth: int = 0) -> str:
     if depth <= 0:
-        return f"article/{escape(slug)}/"
-    return f"../{escape(slug)}/"
+        return f"article/{slug}/"
+    return f"../{slug}/"
+
+
+def home_anchor(fragment: str, depth: int = 0, on_homepage: bool = False) -> str:
+    tag = fragment.lstrip("#")
+    if on_homepage:
+        return f"#{tag}"
+    return f"{site_href('index.html', depth)}#{tag}"
 
 
 def extract_body(text: str) -> str:
@@ -96,11 +103,12 @@ def extract_title(meta: dict[str, str], body: str, path: Path) -> str:
 
 def slug_from_path(path: Path) -> str:
     stem = path.stem
+    raw = stem
     if stem.startswith("dr-"):
         match = re.match(r"dr-\d+-(.+)", stem, re.I)
         if match:
-            return match.group(1).lower()
-    return re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-")
+            raw = match.group(1)
+    return re.sub(r"[^a-z0-9]+", "-", raw.lower()).strip("-") or "story"
 
 
 def article_id(meta: dict[str, str], path: Path) -> str:
@@ -276,11 +284,11 @@ def chrome_head(page_title: str, depth: int = 0) -> str:
 <body data-site-root="{root_attr}">"""
 
 
-def chrome_header(active_section: str = "", depth: int = 0) -> str:
+def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = False) -> str:
     today = datetime.now().strftime("%A, %B %d, %Y").replace(" 0", " ")
     home = site_href("index.html", depth)
     nav_items = "".join(
-        f'<a href="#{s.lower().replace(" ", "-")}" class="nav-link{" active" if s == active_section else ""}">{escape(s)}</a>'
+        f'<a href="{home_anchor(s.lower().replace(" ", "-"), depth, on_homepage)}" class="nav-link{" active" if s == active_section else ""}">{escape(s)}</a>'
         for s in SECTIONS
     )
     return f"""
@@ -290,7 +298,7 @@ def chrome_header(active_section: str = "", depth: int = 0) -> str:
     <nav class="utility-links">
       <a href="{site_href("about.html", depth)}">About</a>
       <a href="{site_href("contact.html", depth)}">Contact</a>
-      <a href="#newsletter">Newsletter</a>
+      <a href="{home_anchor("newsletter", depth, on_homepage)}">Newsletter</a>
       <span class="subscribe-cta" data-feature="subscription" aria-hidden="true"><a href="#">Subscribe</a></span>
       <a href="#">Sign In</a>
     </nav>
@@ -312,8 +320,11 @@ def chrome_header(active_section: str = "", depth: int = 0) -> str:
 </header>"""
 
 
-def chrome_footer(depth: int = 0) -> str:
-    section_links = "".join(f"<li><a href=\"#{s.lower().replace(' ', '-')}\">{escape(s)}</a></li>" for s in SECTIONS)
+def chrome_footer(depth: int = 0, on_homepage: bool = False) -> str:
+    section_links = "".join(
+        f'<li><a href="{home_anchor(s.lower().replace(" ", "-"), depth, on_homepage)}">{escape(s)}</a></li>'
+        for s in SECTIONS
+    )
     js = site_href("assets/js/paper.js", depth)
     return f"""
 <footer class="site-footer">
@@ -332,15 +343,7 @@ def chrome_footer(depth: int = 0) -> str:
       <ul>
         <li><a href="{site_href("about.html", depth)}">About</a></li>
         <li><a href="{site_href("contact.html", depth)}">Contact</a></li>
-        <li><a href="#newsletter">Newsletter</a></li>
-      </ul>
-    </div>
-    <div>
-      <h4>Follow</h4>
-      <ul class="social-links">
-        <li><a href="#">Twitter</a></li>
-        <li><a href="#">Facebook</a></li>
-        <li><a href="#">Instagram</a></li>
+        <li><a href="{home_anchor("newsletter", depth, on_homepage)}">Newsletter</a></li>
       </ul>
     </div>
   </div>
@@ -420,7 +423,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
 
     return (
         chrome_head("Home")
-        + chrome_header()
+        + chrome_header(on_homepage=True)
         + f"""
 <main class="page-home">
   <div class="home-top">
@@ -481,7 +484,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
 </main>
 <script type="application/json" id="articles-data">{catalog_json}</script>
 """
-        + chrome_footer(0)
+        + chrome_footer(0, on_homepage=True)
     )
 
 
@@ -489,7 +492,7 @@ def generate_article_page(article: dict[str, Any]) -> str:
     depth = 2
     return (
         chrome_head(article["title"], depth)
-        + chrome_header(article["section"], depth)
+        + chrome_header(article["section"], depth, on_homepage=False)
         + f"""
 <main class="page-article">
   <article class="full-article">
@@ -508,7 +511,7 @@ def generate_article_page(article: dict[str, Any]) -> str:
   </article>
 </main>
 """
-        + chrome_footer(depth)
+        + chrome_footer(depth, on_homepage=False)
     )
 
 
@@ -519,7 +522,7 @@ def write_static_pages() -> None:
     ]:
         path = SITE / name
         path.write_text(
-            chrome_head(title) + chrome_header() + f"<main class='page-static'><h1>{escape(title)}</h1>{body}</main>" + chrome_footer(),
+            chrome_head(title) + chrome_header(on_homepage=False) + f"<main class='page-static'><h1>{escape(title)}</h1>{body}</main>" + chrome_footer(on_homepage=False),
             encoding="utf-8",
         )
 
