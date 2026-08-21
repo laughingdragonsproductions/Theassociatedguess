@@ -41,6 +41,15 @@ BRAND = "The Associated Guess"
 TAGLINE = "SERIOUS NEWS. ABSURD WORLD."
 DOMAIN = "theassociatedguess.com"
 
+ABOUT_HTML = """
+<p class="about-lede">The Associated Guess was founded on a conviction we have never apologized for: the country deserves hard-hitting journalism—clear-eyed, unsentimental, and unwilling to trade accuracy for access.</p>
+<p>We studied the major outlets closely. We attended the briefings, read the earnings calls, and noted how often “breaking” meant “gently confirmed by a person who would not be quoted.” We concluded that if we wanted reporting that actually landed, we would have to pursue it the old-fashioned way: assign the story, verify the details, and publish before the world had a chance to contradict us by happening differently.</p>
+<p>Our newsroom does not run on tips from unnamed officials, leaked slide decks, or the slow accident of events. We run on editors who ask hard questions, correspondents who file from places that sound plausible, and a standards desk that treats every dateline as a promise. When a source speaks on the record, they are on the record. When we describe a policy, a protest, or a squirrel-related municipal ordinance, we describe it with the gravity it deserves.</p>
+<p>We are independent. We are obsessive about craft. We believe the reader should finish an article slightly more informed and significantly more concerned than when they started—whether the subject is the economy, the climate, or the behavioral standards now expected of smart refrigerators.</p>
+<p>If something on our front page strikes you as unlikely, read it again. Read the quotes. Follow the logic. We trust you to draw your own conclusions. We have already drawn ours.</p>
+<p class="about-signature"><em>SERIOUS NEWS. ABSURD WORLD.</em> — The Editors</p>
+"""
+
 
 def site_href(path: str, depth: int = 0) -> str:
     """Relative URL from a page at the given depth (0 = site root)."""
@@ -282,7 +291,7 @@ def chrome_footer(depth: int = 0) -> str:
   <div class="footer-grid">
     <div>
       <strong>{escape(BRAND)}</strong>
-      <p class="footer-disclaimer">This is a satire publication. {escape(TAGLINE)}</p>
+      <p class="footer-tagline">{escape(TAGLINE)}</p>
       <p class="footer-copy">© 2026 {escape(BRAND)} · {escape(DOMAIN)}</p>
     </div>
     <div>
@@ -476,7 +485,7 @@ def generate_article_page(article: dict[str, Any]) -> str:
 
 def write_static_pages() -> None:
     for name, title, body in [
-        ("about.html", "About", "<p>A parody national newspaper. The chrome is serious. The stories are not.</p>"),
+        ("about.html", "About", ABOUT_HTML),
         ("contact.html", "Contact", "<p>tips@theassociatedguess.com · Millfield, probably.</p>"),
     ]:
         path = SITE / name
