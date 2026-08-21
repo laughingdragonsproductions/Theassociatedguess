@@ -25,6 +25,8 @@ powershell -File scripts/preview.ps1
 
 Open http://localhost:8081/
 
+**Live (GitHub Pages):** https://laughingdragonsproductions.github.io/Theassociatedguess/
+
 ## Notes
 
 - Top 4 above-the-fold stories randomize on each homepage load (`assets/js/paper.js`).

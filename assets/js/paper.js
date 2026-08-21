@@ -16,8 +16,23 @@
     return div.innerHTML;
   }
 
+  function sitePath(subpath) {
+    var root = document.body.getAttribute("data-site-root") || "";
+    if (root === ".") {
+      root = "";
+    }
+    if (root && !root.endsWith("/")) {
+      root += "/";
+    }
+    return root + String(subpath || "").replace(/^\//, "");
+  }
+
+  function articleUrl(slug) {
+    return sitePath("article/" + encodeURIComponent(slug) + "/");
+  }
+
   function cardHtml(article, size) {
-    const url = "/article/" + encodeURIComponent(article.slug) + "/";
+    const url = articleUrl(article.slug);
     const dek = (article.dek || "").slice(0, 140);
     return (
       '<article class="story-card story-card-' +
@@ -64,7 +79,7 @@
     if (!pick.length) return;
 
     const hero = pick[0];
-    const heroUrl = "/article/" + encodeURIComponent(hero.slug) + "/";
+    const heroUrl = articleUrl(hero.slug);
     heroEl.innerHTML =
       '<div class="hero-layout">' +
       '<a href="' +

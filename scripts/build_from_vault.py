@@ -42,8 +42,22 @@ TAGLINE = "SERIOUS NEWS. ABSURD WORLD."
 DOMAIN = "theassociatedguess.com"
 
 
+def site_href(path: str, depth: int = 0) -> str:
+    """Relative URL from a page at the given depth (0 = site root)."""
+    clean = path.lstrip("/")
+    if depth <= 0:
+        return clean
+    return ("../" * depth) + clean
+
+
 def escape(text: str) -> str:
     return html.escape(text or "", quote=True)
+
+
+def article_href(slug: str, depth: int = 0) -> str:
+    if depth <= 0:
+        return f"article/{escape(slug)}/"
+    return f"../{escape(slug)}/"
 
 
 def extract_body(text: str) -> str:
@@ -205,8 +219,10 @@ def promo_footer(article: dict[str, Any]) -> str:
     return f'<p class="promo-link"><a href="{escape(url)}" rel="noopener">{escape(promo)}</a></p>'
 
 
-def chrome_head(page_title: str) -> str:
+def chrome_head(page_title: str, depth: int = 0) -> str:
     title = escape(page_title)
+    root_attr = site_href("", depth).rstrip("/") or "."
+    css = site_href("assets/css/paper.css", depth)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -217,15 +233,16 @@ def chrome_head(page_title: str) -> str:
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/css/paper.css" />
+  <link rel="stylesheet" href="{css}" />
 </head>
-<body>"""
+<body data-site-root="{root_attr}">"""
 
 
-def chrome_header(active_section: str = "") -> str:
+def chrome_header(active_section: str = "", depth: int = 0) -> str:
     today = datetime.now().strftime("%A, %B %d, %Y").replace(" 0", " ")
+    home = site_href("index.html", depth)
     nav_items = "".join(
-        f'<a href="/#{s.lower().replace(" ", "-")}" class="nav-link{" active" if s == active_section else ""}">{escape(s)}</a>'
+        f'<a href="#{s.lower().replace(" ", "-")}" class="nav-link{" active" if s == active_section else ""}">{escape(s)}</a>'
         for s in SECTIONS
     )
     return f"""
@@ -233,8 +250,8 @@ def chrome_header(active_section: str = "") -> str:
   <div class="utility-bar">
     <span class="utility-date">{today}</span>
     <nav class="utility-links">
-      <a href="/about.html">About</a>
-      <a href="/contact.html">Contact</a>
+      <a href="{site_href("about.html", depth)}">About</a>
+      <a href="{site_href("contact.html", depth)}">Contact</a>
       <a href="#newsletter">Newsletter</a>
       <span class="subscribe-cta" data-feature="subscription" aria-hidden="true"><a href="#">Subscribe</a></span>
       <a href="#">Sign In</a>
@@ -243,7 +260,7 @@ def chrome_header(active_section: str = "") -> str:
   <div class="masthead-row">
     <div class="weather-widget">72°F · Partly Absurd · Millfield</div>
     <div class="masthead-center">
-      <a href="/" class="masthead-logo">{escape(BRAND)}</a>
+      <a href="{home}" class="masthead-logo">{escape(BRAND)}</a>
       <p class="masthead-tagline">{escape(TAGLINE)}</p>
     </div>
     <form class="search-box" action="#" onsubmit="return false;">
@@ -257,8 +274,9 @@ def chrome_header(active_section: str = "") -> str:
 </header>"""
 
 
-def chrome_footer() -> str:
-    section_links = "".join(f"<li><a href=\"/#{s.lower().replace(' ', '-')}\">{escape(s)}</a></li>" for s in SECTIONS)
+def chrome_footer(depth: int = 0) -> str:
+    section_links = "".join(f"<li><a href=\"#{s.lower().replace(' ', '-')}\">{escape(s)}</a></li>" for s in SECTIONS)
+    js = site_href("assets/js/paper.js", depth)
     return f"""
 <footer class="site-footer">
   <div class="footer-grid">
@@ -274,8 +292,8 @@ def chrome_footer() -> str:
     <div>
       <h4>Company</h4>
       <ul>
-        <li><a href="/about.html">About</a></li>
-        <li><a href="/contact.html">Contact</a></li>
+        <li><a href="{site_href("about.html", depth)}">About</a></li>
+        <li><a href="{site_href("contact.html", depth)}">Contact</a></li>
         <li><a href="#newsletter">Newsletter</a></li>
       </ul>
     </div>
@@ -289,13 +307,13 @@ def chrome_footer() -> str:
     </div>
   </div>
 </footer>
-<script src="/assets/js/paper.js"></script>
+<script src="{js}"></script>
 </body>
 </html>"""
 
 
-def render_card(article: dict[str, Any], size: str = "small") -> str:
-    url = f"/article/{escape(article['slug'])}/"
+def render_card(article: dict[str, Any], size: str = "small", depth: int = 0) -> str:
+    url = article_href(article["slug"], depth)
     return f"""
 <article class="story-card story-card-{size}">
   <a href="{url}" class="story-thumb-link">
@@ -308,10 +326,10 @@ def render_card(article: dict[str, Any], size: str = "small") -> str:
 </article>"""
 
 
-def render_trending_list(articles: list[dict[str, Any]], limit: int = 5) -> str:
+def render_trending_list(articles: list[dict[str, Any]], limit: int = 5, depth: int = 0) -> str:
     items = []
     for i, a in enumerate(articles[:limit], 1):
-        url = f"/article/{escape(a['slug'])}/"
+        url = article_href(a["slug"], depth)
         items.append(
             f'<li><span class="trend-rank">{i}</span> '
             f'<a href="{url}">{escape(a["title"])}</a></li>'
@@ -319,7 +337,7 @@ def render_trending_list(articles: list[dict[str, Any]], limit: int = 5) -> str:
     return "\n".join(items)
 
 
-def render_archive(articles: list[dict[str, Any]]) -> str:
+def render_archive(articles: list[dict[str, Any]], depth: int = 0) -> str:
     by_month: dict[str, list[dict[str, Any]]] = {}
     for a in articles:
         d = date.fromisoformat(a["display_date"])
@@ -329,7 +347,7 @@ def render_archive(articles: list[dict[str, Any]]) -> str:
     for month in sorted(by_month.keys(), key=lambda m: datetime.strptime(m, "%B %Y"), reverse=True):
         rows = []
         for a in by_month[month]:
-            url = f"/article/{escape(a['slug'])}/"
+            url = article_href(a["slug"], depth)
             rows.append(
                 f'<li><a href="{url}">{escape(a["title"])}</a> '
                 f'<span class="archive-meta">{escape(a["display_date_long"])} · {escape(a["section"])}</span></li>'
@@ -347,7 +365,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
         sec_articles = [a for a in articles if a["section"] == section][:5]
         if not sec_articles:
             continue
-        cards = "".join(render_card(a) for a in sec_articles)
+        cards = "".join(render_card(a, depth=0) for a in sec_articles)
         sid = section.lower().replace(" ", "-")
         section_blocks.append(
             f'<section class="section-rail" id="{sid}"><h2 class="section-title">{escape(section)}</h2><div class="card-grid">{cards}</div></section>'
@@ -378,15 +396,15 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
       <section class="secondary-grid">
         <h2 class="visually-hidden">More headlines</h2>
         <div class="card-grid four-up">
-          {"".join(render_card(a) for a in secondary)}
+          {"".join(render_card(a, depth=0) for a in secondary)}
         </div>
       </section>
       {"".join(section_blocks)}
       <section class="opinion-block" id="opinion">
         <h2 class="section-title">Opinion &amp; Investigations</h2>
         <div class="two-col">
-          <div><h3>Opinion</h3>{"".join(render_card(a, "compact") for a in opinion[:2])}</div>
-          <div><h3>Investigations</h3>{"".join(render_card(a, "compact") for a in investigations[:2])}</div>
+          <div><h3>Opinion</h3>{"".join(render_card(a, "compact", depth=0) for a in opinion[:2])}</div>
+          <div><h3>Investigations</h3>{"".join(render_card(a, "compact", depth=0) for a in investigations[:2])}</div>
         </div>
       </section>
       <section class="community-notices">
@@ -399,7 +417,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
       </section>
       <section class="long-archive" id="news">
         <h2 class="section-title">Archive</h2>
-        {render_archive(articles)}
+        {render_archive(articles, depth=0)}
       </section>
     </div>
     <aside class="home-sidebar">
@@ -409,9 +427,9 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
           <button type="button" class="tab" data-tab="mostread">Most Read</button>
           <button type="button" class="tab" data-tab="latest">Latest</button>
         </div>
-        <ol class="trending-list" data-panel="trending">{render_trending_list(trending)}</ol>
-        <ol class="trending-list hidden" data-panel="mostread">{render_trending_list(sorted(articles, key=lambda a: a["read_minutes"], reverse=True))}</ol>
-        <ol class="trending-list hidden" data-panel="latest">{render_trending_list(latest)}</ol>
+        <ol class="trending-list" data-panel="trending">{render_trending_list(trending, depth=0)}</ol>
+        <ol class="trending-list hidden" data-panel="mostread">{render_trending_list(sorted(articles, key=lambda a: a["read_minutes"], reverse=True), depth=0)}</ol>
+        <ol class="trending-list hidden" data-panel="latest">{render_trending_list(latest, depth=0)}</ol>
       </section>
       <section class="newsletter-box" id="newsletter">
         <h3>The Guess Brief</h3>
@@ -427,14 +445,15 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
 </main>
 <script type="application/json" id="articles-data">{catalog_json}</script>
 """
-        + chrome_footer()
+        + chrome_footer(0)
     )
 
 
 def generate_article_page(article: dict[str, Any]) -> str:
+    depth = 2
     return (
-        chrome_head(article["title"])
-        + chrome_header(article["section"])
+        chrome_head(article["title"], depth)
+        + chrome_header(article["section"], depth)
         + f"""
 <main class="page-article">
   <article class="full-article">
@@ -449,11 +468,11 @@ def generate_article_page(article: dict[str, Any]) -> str:
       {article['body_html']}
       {promo_footer(article)}
     </div>
-    <p class="back-link"><a href="/">← Back to front page</a></p>
+    <p class="back-link"><a href="{site_href("index.html", depth)}">← Back to front page</a></p>
   </article>
 </main>
 """
-        + chrome_footer()
+        + chrome_footer(depth)
     )
 
 
