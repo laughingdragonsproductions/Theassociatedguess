@@ -541,6 +541,7 @@ def build_site(archive: bool = False) -> dict[str, Any]:
         encoding="utf-8",
     )
     (SITE / "index.html").write_text(generate_index(ingested), encoding="utf-8")
+    (SITE / "CNAME").write_text(f"{DOMAIN}\n", encoding="utf-8")
     write_static_pages()
     for article in ingested:
         adir = SITE / "article" / article["slug"]
