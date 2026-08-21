@@ -26,7 +26,7 @@ ARTICLES_DIR = VAULT / "articles"
 STORIES_USED = ARTICLES_DIR / "Stories-Used"
 MANIFEST_PATH = STORIES_USED / "manifest.json"
 DATE_FOLDER_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-SKIP_NAME_PARTS = ("example-article", "manifest.json")
+SKIP_NAME_PARTS = ("example-article", "manifest.json", "satire-article")
 SECTIONS = [
     "News",
     "Politics",
@@ -151,6 +151,30 @@ def collect_vault_paths() -> list[Path]:
     return sorted(unique.values(), key=lambda p: p.name.lower())
 
 
+def normalize_section(raw: str) -> str:
+    section = (raw or "News").strip()
+    if section.lower() == "satire":
+        return "News"
+    for name in SECTIONS:
+        if section.lower() == name.lower():
+            return name
+    return "News"
+
+
+def is_junk_article(title: str, body: str, slug: str) -> bool:
+    if re.search(r"\bsatire\b", title, re.I):
+        return True
+    if "satire-article" in slug.lower():
+        return True
+    sentences = len(re.findall(r"[.!?]", body))
+    if sentences < 2:
+        return True
+    lines = [ln.strip() for ln in body.splitlines() if ln.strip()]
+    if len(lines) >= 4 and sentences < len(lines) // 2:
+        return True
+    return False
+
+
 def ingest_article(path: Path) -> dict[str, Any] | None:
     try:
         text = path.read_text(encoding="utf-8")
@@ -159,22 +183,27 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
     meta = parse_frontmatter(text)
     body = extract_body(text)
     title = extract_title(meta, body, path)
+    slug = slug_from_path(path)
     if not title or len(body) < 80:
         return None
+    if is_junk_article(title, body, slug):
+        return None
     aid = article_id(meta, path)
-    slug = slug_from_path(path)
     words = len(re.findall(r"\w+", body))
     read_minutes = max(1, round(words / 200))
-    section = (meta.get("section") or meta.get("category") or "News").strip() or "News"
+    section = normalize_section(meta.get("section") or meta.get("category") or "News")
+    dek = (meta.get("dek") or "").strip() or title[:120]
+    if re.search(r"\bsatire\b", dek, re.I):
+        dek = title[:120]
     return {
         "id": aid,
         "slug": slug,
         "title": title,
-        "dek": (meta.get("dek") or "").strip() or title[:120],
+        "dek": dek,
         "section": section,
         "byline": (meta.get("byline") or "Staff").strip(),
         "dateline": (meta.get("dateline") or "").strip(),
-        "kind": (meta.get("kind") or meta.get("category") or "satire").strip(),
+        "kind": (meta.get("kind") or "news").strip(),
         "promo": (meta.get("promo") or "none").strip(),
         "promo_url": (meta.get("promo_url") or "").strip(),
         "body": body,
@@ -385,7 +414,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
         investigations = articles[12:16]
 
     catalog_json = json.dumps(
-        [{k: v for k, v in a.items() if k not in ("body", "body_html", "source_path")} for a in articles],
+        [{k: v for k, v in a.items() if k not in ("body", "body_html", "source_path", "kind")} for a in articles],
         ensure_ascii=False,
     )
 
@@ -542,7 +571,10 @@ def build_site(archive: bool = False) -> dict[str, Any]:
 
     (SITE / "data").mkdir(parents=True, exist_ok=True)
     (SITE / "article").mkdir(parents=True, exist_ok=True)
-    catalog = [{k: v for k, v in a.items() if k not in ("body", "body_html")} for a in ingested]
+    catalog = [
+        {k: v for k, v in a.items() if k not in ("body", "body_html", "source_path", "kind")}
+        for a in ingested
+    ]
     (SITE / "data" / "articles.json").write_text(
         json.dumps({"brand": BRAND, "articles": catalog}, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
@@ -554,6 +586,13 @@ def build_site(archive: bool = False) -> dict[str, Any]:
         adir = SITE / "article" / article["slug"]
         adir.mkdir(parents=True, exist_ok=True)
         (adir / "index.html").write_text(generate_article_page(article), encoding="utf-8")
+
+    active_slugs = {a["slug"] for a in ingested}
+    article_root = SITE / "article"
+    if article_root.is_dir():
+        for child in article_root.iterdir():
+            if child.is_dir() and child.name not in active_slugs:
+                shutil.rmtree(child)
 
     moved = 0
     if archive:
