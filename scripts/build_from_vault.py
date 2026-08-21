@@ -20,6 +20,8 @@ if str(DESKTOP_AGENT) not in sys.path:
 
 from integrations.satire_vault_monitor import ID_RE, parse_frontmatter  # noqa: E402
 
+from article_images import pick_article_images  # noqa: E402
+
 VAULT = Path(r"G:\openclaw\business\satire-news")
 SITE = ROOT
 ARTICLES_DIR = VAULT / "articles"
@@ -203,6 +205,16 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
     dek = (meta.get("dek") or "").strip() or title[:120]
     if re.search(r"\bsatire\b", dek, re.I):
         dek = title[:120]
+    image_prompt = (meta.get("image_prompt") or "").strip()
+    hero_image, thumb_image = pick_article_images(
+        article_id=aid,
+        slug=slug,
+        title=title,
+        dek=dek,
+        section=section,
+        body=body,
+        image_prompt=image_prompt,
+    )
     return {
         "id": aid,
         "slug": slug,
@@ -218,8 +230,9 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
         "body_html": body_to_html(body),
         "read_minutes": read_minutes,
         "source_path": str(path),
-        "hero_image": f"https://picsum.photos/seed/{aid}/800/500",
-        "thumb_image": f"https://picsum.photos/seed/{aid}/400/300",
+        "hero_image": hero_image,
+        "thumb_image": thumb_image,
+        "image_prompt": image_prompt,
         "_num_id": numeric_id(aid),
     }
 
