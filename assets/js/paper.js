@@ -116,8 +116,47 @@
       .join("");
   }
 
-  function initTabs() {
+  function renderTrendingList(articles, limit) {
+    const n = limit || 8;
+    return shuffle(
+      articles.filter(function (a) {
+        return a.title && a.slug;
+      })
+    )
+      .slice(0, n)
+      .map(function (a, i) {
+        return (
+          '<li><span class="trend-rank">' +
+          (i + 1) +
+          '</span> <a href="' +
+          articleUrl(a.slug) +
+          '">' +
+          escapeHtml(a.title) +
+          "</a></li>"
+        );
+      })
+      .join("");
+  }
+
+  function refreshTrendingPanel(name, articles) {
+    const panel = document.querySelector(
+      '.trending-list[data-panel="' + name + '"]'
+    );
+    if (panel) {
+      panel.innerHTML = renderTrendingList(articles);
+    }
+  }
+
+  function initTabs(articles) {
     const tabs = document.querySelectorAll(".tab-bar .tab");
+    if (!tabs.length || !articles.length) {
+      return;
+    }
+
+    ["trending", "mostread", "latest"].forEach(function (name) {
+      refreshTrendingPanel(name, articles);
+    });
+
     tabs.forEach(function (tab) {
       tab.addEventListener("click", function () {
         const name = tab.getAttribute("data-tab");
@@ -130,6 +169,7 @@
             panel.getAttribute("data-panel") !== name
           );
         });
+        refreshTrendingPanel(name, articles);
       });
     });
   }
@@ -156,8 +196,9 @@
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    renderFold(loadArticles());
-    initTabs();
+    const articles = loadArticles();
+    renderFold(articles);
+    initTabs(articles);
     initNav();
   });
 })();

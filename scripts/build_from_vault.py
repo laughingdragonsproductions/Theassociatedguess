@@ -358,8 +358,6 @@ def render_archive(articles: list[dict[str, Any]], depth: int = 0) -> str:
 
 def generate_index(articles: list[dict[str, Any]]) -> str:
     secondary = articles[4:8]
-    trending = articles[:10]
-    latest = sorted(articles, key=lambda a: a["display_date"], reverse=True)[:10]
     section_blocks = []
     for section in SECTIONS:
         sec_articles = [a for a in articles if a["section"] == section][:5]
@@ -427,9 +425,9 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
           <button type="button" class="tab" data-tab="mostread">Most Read</button>
           <button type="button" class="tab" data-tab="latest">Latest</button>
         </div>
-        <ol class="trending-list" data-panel="trending">{render_trending_list(trending, depth=0)}</ol>
-        <ol class="trending-list hidden" data-panel="mostread">{render_trending_list(sorted(articles, key=lambda a: a["read_minutes"], reverse=True), depth=0)}</ol>
-        <ol class="trending-list hidden" data-panel="latest">{render_trending_list(latest, depth=0)}</ol>
+        <ol class="trending-list" data-panel="trending"></ol>
+        <ol class="trending-list hidden" data-panel="mostread"></ol>
+        <ol class="trending-list hidden" data-panel="latest"></ol>
       </section>
       <section class="newsletter-box" id="newsletter">
         <h3>The Guess Brief</h3>
