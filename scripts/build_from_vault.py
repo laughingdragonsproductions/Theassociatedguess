@@ -322,8 +322,8 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
       <a href="{home}" class="masthead-logo">{escape(BRAND)}</a>
       <p class="masthead-tagline">{escape(TAGLINE)}</p>
     </div>
-    <form class="search-box" action="#" onsubmit="return false;">
-      <input type="search" placeholder="Search" aria-label="Search" />
+    <form class="search-box" action="{site_href("search.html", depth)}" method="get" role="search">
+      <input type="search" name="q" placeholder="Search" aria-label="Search stories" autocomplete="off" />
     </form>
   </div>
   <nav class="main-nav" aria-label="Sections">
@@ -430,7 +430,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
         investigations = articles[12:16]
 
     catalog_json = json.dumps(
-        [{k: v for k, v in a.items() if k not in ("body", "body_html", "source_path", "kind")} for a in articles],
+        [article_catalog_entry(a) for a in articles],
         ensure_ascii=False,
     )
 
@@ -528,6 +528,22 @@ def generate_article_page(article: dict[str, Any]) -> str:
     )
 
 
+def article_catalog_entry(article: dict[str, Any]) -> dict[str, Any]:
+    entry = {k: v for k, v in article.items() if k not in ("body", "body_html", "source_path", "kind")}
+    entry["search_text"] = " ".join(
+        [
+            article.get("title") or "",
+            article.get("dek") or "",
+            article.get("section") or "",
+            article.get("byline") or "",
+            article.get("dateline") or "",
+            article.get("slug", "").replace("-", " "),
+            (article.get("body") or "")[:500],
+        ]
+    )
+    return entry
+
+
 def write_static_pages() -> None:
     for name, title, body in [
         ("about.html", "About", ABOUT_HTML),
@@ -538,6 +554,23 @@ def write_static_pages() -> None:
             chrome_head(title) + chrome_header(on_homepage=False) + f"<main class='page-static'><h1>{escape(title)}</h1>{body}</main>" + chrome_footer(on_homepage=False),
             encoding="utf-8",
         )
+    search_path = SITE / "search.html"
+    search_path.write_text(
+        chrome_head("Search")
+        + chrome_header(on_homepage=False)
+        + """
+<main class="page-search">
+  <header class="search-page-header">
+    <h1>Search</h1>
+    <p class="search-page-lede">Find stories across The Associated Guess archive.</p>
+  </header>
+  <div id="search-status" class="search-status" role="status" aria-live="polite"></div>
+  <ol id="search-results" class="search-results"></ol>
+</main>
+"""
+        + chrome_footer(on_homepage=False),
+        encoding="utf-8",
+    )
 
 
 def archive_used(ingested: list[dict[str, Any]]) -> int:
@@ -587,10 +620,7 @@ def build_site(archive: bool = False) -> dict[str, Any]:
 
     (SITE / "data").mkdir(parents=True, exist_ok=True)
     (SITE / "article").mkdir(parents=True, exist_ok=True)
-    catalog = [
-        {k: v for k, v in a.items() if k not in ("body", "body_html", "source_path", "kind")}
-        for a in ingested
-    ]
+    catalog = [article_catalog_entry(a) for a in ingested]
     (SITE / "data" / "articles.json").write_text(
         json.dumps({"brand": BRAND, "articles": catalog}, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
