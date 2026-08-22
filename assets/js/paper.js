@@ -188,11 +188,179 @@
     const el = document.getElementById("articles-data");
     if (!el) return [];
     try {
-      return JSON.parse(el.textContent || "[]");
+      const parsed = JSON.parse(el.textContent || "[]");
+      return Array.isArray(parsed) ? parsed : parsed.articles || [];
     } catch (e) {
       console.warn("articles-data parse failed", e);
       return [];
     }
+  }
+
+  function fetchArticles() {
+    const cached = loadArticles();
+    if (cached.length) {
+      return Promise.resolve(cached);
+    }
+    return fetch(sitePath("data/articles.json"))
+      .then(function (res) {
+        if (!res.ok) {
+          throw new Error("articles.json fetch failed");
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        return data.articles || [];
+      })
+      .catch(function (err) {
+        console.warn("article catalog fetch failed", err);
+        return [];
+      });
+  }
+
+  function searchTerms(query) {
+    return String(query || "")
+      .toLowerCase()
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+  }
+
+  function articleHaystack(article) {
+    return (
+      article.search_text ||
+      [
+        article.title,
+        article.dek,
+        article.section,
+        article.byline,
+        article.dateline,
+        (article.slug || "").replace(/-/g, " "),
+      ].join(" ")
+    ).toLowerCase();
+  }
+
+  function scoreArticle(article, terms) {
+    const hay = articleHaystack(article);
+    const title = (article.title || "").toLowerCase();
+    const dek = (article.dek || "").toLowerCase();
+    let score = 0;
+    let matched = 0;
+    terms.forEach(function (term) {
+      if (!hay.includes(term)) {
+        return;
+      }
+      matched += 1;
+      if (title.includes(term)) {
+        score += 12;
+      }
+      if (dek.includes(term)) {
+        score += 6;
+      }
+      if ((article.section || "").toLowerCase().includes(term)) {
+        score += 4;
+      }
+      if ((article.byline || "").toLowerCase().includes(term)) {
+        score += 2;
+      }
+      score += 1;
+    });
+    if (matched < terms.length) {
+      return -1;
+    }
+    return score;
+  }
+
+  function searchArticles(articles, query) {
+    const terms = searchTerms(query);
+    if (!terms.length) {
+      return [];
+    }
+    return articles
+      .map(function (article) {
+        return { article: article, score: scoreArticle(article, terms) };
+      })
+      .filter(function (item) {
+        return item.score >= 0;
+      })
+      .sort(function (a, b) {
+        return b.score - a.score;
+      })
+      .map(function (item) {
+        return item.article;
+      });
+  }
+
+  function searchResultHtml(article) {
+    const url = articleUrl(article.slug);
+    return (
+      '<li class="search-result">' +
+      '<a href="' +
+      url +
+      '" class="search-result-link">' +
+      '<img src="' +
+      escapeHtml(article.thumb_image || article.hero_image) +
+      '" alt="" class="search-result-thumb" loading="lazy" />' +
+      '<span class="search-result-body">' +
+      '<span class="search-result-kicker">' +
+      escapeHtml((article.section || "News").toUpperCase()) +
+      "</span>" +
+      '<span class="search-result-title">' +
+      escapeHtml(article.title) +
+      "</span>" +
+      '<span class="search-result-dek">' +
+      escapeHtml((article.dek || "").slice(0, 160)) +
+      "</span>" +
+      '<span class="search-result-meta">' +
+      escapeHtml(article.display_date_long || "") +
+      " · By " +
+      escapeHtml(article.byline || "Staff") +
+      "</span>" +
+      "</span>" +
+      "</a>" +
+      "</li>"
+    );
+  }
+
+  function initSearchForms() {
+    const params = new URLSearchParams(window.location.search);
+    const query = params.get("q") || "";
+    document.querySelectorAll('.search-box input[name="q"]').forEach(function (input) {
+      if (query) {
+        input.value = query;
+      }
+    });
+  }
+
+  function initSearchPage() {
+    const main = document.querySelector(".page-search");
+    if (!main) {
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
+    const query = (params.get("q") || "").trim();
+    const statusEl = document.getElementById("search-status");
+    const resultsEl = document.getElementById("search-results");
+    if (!statusEl || !resultsEl) {
+      return;
+    }
+    if (!query) {
+      statusEl.textContent = "Enter a headline, topic, or keyword above to search the archive.";
+      return;
+    }
+    statusEl.textContent = "Searching…";
+    fetchArticles().then(function (articles) {
+      const results = searchArticles(articles, query);
+      if (!results.length) {
+        statusEl.textContent = 'No stories matched "' + query + '". Try fewer words or a broader topic.';
+        resultsEl.innerHTML = "";
+        return;
+      }
+      statusEl.textContent =
+        results.length === 1
+          ? '1 story for "' + query + '"'
+          : results.length + ' stories for "' + query + '"';
+      resultsEl.innerHTML = results.map(searchResultHtml).join("");
+    });
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -200,5 +368,7 @@
     renderFold(articles);
     initTabs(articles);
     initNav();
+    initSearchForms();
+    initSearchPage();
   });
 })();
