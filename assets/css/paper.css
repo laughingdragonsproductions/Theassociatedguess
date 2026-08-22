@@ -423,6 +423,27 @@ img {
   font-weight: 600;
 }
 
+.article-subhead {
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 2rem 0 0.75rem;
+}
+
+.article-body .article-list {
+  margin: 0 0 1.25rem 1.25rem;
+  padding: 0;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.article-body .article-list a {
+  font-weight: 600;
+}
+
 .page-static {
   max-width: 42rem;
   margin: 0 auto;
@@ -451,6 +472,43 @@ img {
   margin-top: 2rem;
   font-size: 0.95rem;
   color: var(--muted);
+}
+
+.page-static .about-real {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule, #ddd);
+}
+
+.page-static h2 {
+  font-family: var(--sans);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 1.75rem 0 0.75rem;
+}
+
+.page-static ul {
+  margin: 0 0 1rem 1.25rem;
+  padding: 0;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.page-static li {
+  margin-bottom: 0.35rem;
+}
+
+.footer-parent {
+  font-size: 0.85rem;
+  margin: 0.35rem 0 0;
+}
+
+.footer-parent a {
+  color: inherit;
+  font-weight: 600;
 }
 
 .page-search {
@@ -654,4 +712,24 @@ img {
     display: block;
     margin-left: auto;
   }
+}
+
+.ad-slot {
+  margin: 1.25rem 0;
+  min-height: 0;
+}
+
+.ad-slot-sidebar {
+  margin-top: 1.5rem;
+}
+
+.ad-slot-footer {
+  max-width: 728px;
+  margin: 1rem auto 0;
+}
+
+.ad-unit,
+.ad-unit-sidebar {
+  display: block;
+  text-align: center;
 }
