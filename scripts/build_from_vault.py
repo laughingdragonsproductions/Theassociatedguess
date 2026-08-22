@@ -12,6 +12,9 @@ import sys
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
+
+ET = ZoneInfo("America/New_York")
 
 ROOT = Path(__file__).resolve().parents[1]
 DESKTOP_AGENT = Path(r"G:\LocalAIagent\desktop-agent")
@@ -26,6 +29,7 @@ VAULT = Path(r"G:\openclaw\business\satire-news")
 SITE = ROOT
 ARTICLES_DIR = VAULT / "articles"
 STORIES_USED = ARTICLES_DIR / "Stories-Used"
+BACKLOG = ARTICLES_DIR / "Backlog"
 MANIFEST_PATH = STORIES_USED / "manifest.json"
 DATE_FOLDER_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SKIP_NAME_PARTS = ("example-article", "manifest.json", "satire-article")
@@ -49,21 +53,21 @@ PARENT_SITE = "https://laughing-dragons.com"
 TIPS_EMAIL = f"tips@{DOMAIN}"
 
 ABOUT_HTML = """
-<p class="about-lede">The Associated Guess was founded on a conviction we have never apologized for: the country deserves hard-hitting journalism—clear-eyed, unsentimental, and unwilling to trade accuracy for access.</p>
+<p class="about-lede">The Associated Guess was founded on a conviction we have never apologized for: the country deserves hard-hitting journalism - clear-eyed, unsentimental, and unwilling to trade accuracy for access.</p>
 <p>We studied the major outlets closely. We attended the briefings, read the earnings calls, and noted how often “breaking” meant “gently confirmed by a person who would not be quoted.” We concluded that if we wanted reporting that actually landed, we would have to pursue it the old-fashioned way: assign the story, verify the details, and publish before the world had a chance to contradict us by happening differently.</p>
 <p>Our newsroom does not run on tips from unnamed officials, leaked slide decks, or the slow accident of events. We run on editors who ask hard questions, correspondents who file from places that sound plausible, and a standards desk that treats every dateline as a promise. When a source speaks on the record, they are on the record. When we describe a policy, a protest, or a squirrel-related municipal ordinance, we describe it with the gravity it deserves.</p>
-<p>We are independent. We are obsessive about craft. We believe the reader should finish an article slightly more informed and significantly more concerned than when they started—whether the subject is the economy, the climate, or the behavioral standards now expected of smart refrigerators.</p>
+<p>We are independent. We are obsessive about craft. We believe the reader should finish an article slightly more informed and significantly more concerned than when they started - whether the subject is the economy, the climate, or the behavioral standards now expected of smart refrigerators.</p>
 <p>If something on our front page strikes you as unlikely, read it again. Read the quotes. Follow the logic. We trust you to draw your own conclusions. We have already drawn ours.</p>
-<p class="about-signature"><em>SERIOUS NEWS. ABSURD WORLD.</em> — The Editors</p>
+<p class="about-signature"><em>SERIOUS NEWS. ABSURD WORLD.</em>  -  The Editors</p>
 <section class="about-real">
   <h2>Who publishes this</h2>
   <p><strong>The Associated Guess</strong> is a satirical news property operated by <strong>{legal}</strong>, an independent media and maker studio. This site is part of the Laughing Dragons portfolio alongside games, tools, podcasts, and shop projects hosted at <a href="{parent}" rel="noopener">{parent_host}</a>.</p>
-  <p>Every headline here is fictional parody — written in deadpan news style, not reported as fact. We publish new stories daily. For tips, corrections, or rights questions, see our <a href="contact.html">Contact</a> page.</p>
+  <p>Every headline here is fictional parody  -  written in deadpan news style, not reported as fact. We publish new stories daily. For tips, corrections, or rights questions, see our <a href="contact.html">Contact</a> page.</p>
   <h2>More from Laughing Dragons</h2>
   <ul>
-    <li><a href="{parent}" rel="noopener">Laughing Dragons Productions</a> — studio hub (games, kids show, tools, shop)</li>
-    <li><a href="https://chittinandchattin.com" rel="noopener">Chittin &amp; Chattin</a> — podcast</li>
-    <li><a href="{parent}/contact/" rel="noopener">Studio contact form</a> — general inquiries across the portfolio</li>
+    <li><a href="{parent}" rel="noopener">Laughing Dragons Productions</a>  -  studio hub (games, kids show, tools, shop)</li>
+    <li><a href="https://chittinandchattin.com" rel="noopener">Chittin &amp; Chattin</a>  -  podcast</li>
+    <li><a href="{parent}/contact/" rel="noopener">Studio contact form</a>  -  general inquiries across the portfolio</li>
   </ul>
   <p>Publisher email: <a href="mailto:{email}">{email}</a></p>
 </section>
@@ -87,7 +91,7 @@ Studio hub: <a href="{parent}" rel="noopener">{parent_host}</a></p>
   <li>Corrections or attribution on a satire piece</li>
   <li>Reprint and licensing questions</li>
   <li>Site, privacy, or advertising issues</li>
-  <li>Other Laughing Dragons projects — games, podcast, shop, kids show</li>
+  <li>Other Laughing Dragons projects  -  games, podcast, shop, kids show</li>
 </ul>
 <p>For non-news studio mail, you may also use the <a href="{parent}/contact/" rel="noopener">Laughing Dragons contact form</a>.</p>
 """.format(
@@ -103,9 +107,9 @@ PRIVACY_HTML = """
 <p><strong>The Associated Guess</strong> is published by <strong>{legal}</strong> ("we," "us") at {domain}. This policy describes how we handle information when you visit the site. Our umbrella studio site is <a href="{parent}" rel="noopener">laughing-dragons.com</a>.</p>
 <h2>Information we collect</h2>
 <ul>
-  <li><strong>Server and analytics logs</strong> — IP address, browser type, pages viewed, and referrers collected by our host (GitHub Pages / Cloudflare).</li>
-  <li><strong>Contact email</strong> — if you email us, we receive your address and message contents.</li>
-  <li><strong>Cookies</strong> — set by Google AdSense and our hosting/CDN partners (see Advertising).</li>
+  <li><strong>Server and analytics logs</strong>  -  IP address, browser type, pages viewed, and referrers collected by our host (GitHub Pages / Cloudflare).</li>
+  <li><strong>Contact email</strong>  -  if you email us, we receive your address and message contents.</li>
+  <li><strong>Cookies</strong>  -  set by Google AdSense and our hosting/CDN partners (see Advertising).</li>
 </ul>
 <h2>Advertising</h2>
 <p>We may show Google AdSense display ads on article pages and select editorial pages. We do not place ad units on legal pages (privacy, terms) or empty search results.</p>
@@ -113,10 +117,10 @@ PRIVACY_HTML = """
 <p>You may opt out of personalized advertising via <a href="https://adssettings.google.com" rel="noopener">Google Ads Settings</a> or <a href="https://www.aboutads.info" rel="noopener">www.aboutads.info</a>.</p>
 <h2>Third-party services</h2>
 <ul>
-  <li><strong>Google AdSense</strong> — advertising (shared publisher account across Laughing Dragons portfolio sites)</li>
-  <li><strong>Cloudflare / GitHub Pages</strong> — hosting and delivery</li>
-  <li><strong>Google Fonts</strong> — typography (may log IP)</li>
-  <li><strong>Unsplash</strong> — editorial stock imagery linked from article pages</li>
+  <li><strong>Google AdSense</strong>  -  advertising (shared publisher account across Laughing Dragons portfolio sites)</li>
+  <li><strong>Cloudflare / GitHub Pages</strong>  -  hosting and delivery</li>
+  <li><strong>Google Fonts</strong>  -  typography (may log IP)</li>
+  <li><strong>Unsplash</strong>  -  editorial stock imagery linked from article pages</li>
 </ul>
 <h2>Contact</h2>
 <p>Questions: <a href="mailto:{email}">{email}</a> · Studio: <a href="{parent}/contact/" rel="noopener">{parent_host}/contact/</a></p>
@@ -229,24 +233,28 @@ def is_excluded_path(path: Path) -> bool:
     name = path.name.lower()
     if name == "manifest.json":
         return True
+    if "{nnnn}" in name or "{slug}" in name:
+        return True
     if any(skip in name for skip in SKIP_NAME_PARTS):
         return True
     return False
 
 
-def collect_vault_paths() -> list[Path]:
+def collect_vault_paths(*, include_date_folders: bool = False) -> list[Path]:
+    """Stories-Used only by default; date-folder drafts stay off the live site until ON004 publishes."""
     paths: list[Path] = []
     if not ARTICLES_DIR.is_dir():
         return paths
     if STORIES_USED.is_dir():
         paths.extend(sorted(STORIES_USED.glob("*.md")))
-    for child in sorted(ARTICLES_DIR.iterdir()):
-        if not child.is_dir():
-            continue
-        if child.name in ("Stories-Used", "quarantine"):
-            continue
-        if DATE_FOLDER_RE.match(child.name):
-            paths.extend(sorted(child.glob("*.md")))
+    if include_date_folders:
+        for child in sorted(ARTICLES_DIR.iterdir()):
+            if not child.is_dir():
+                continue
+            if child.name in ("Stories-Used", "quarantine"):
+                continue
+            if DATE_FOLDER_RE.match(child.name):
+                paths.extend(sorted(child.glob("*.md")))
     unique: dict[str, Path] = {}
     for path in paths:
         if is_excluded_path(path):
@@ -255,6 +263,93 @@ def collect_vault_paths() -> list[Path]:
         if key not in unique:
             unique[key] = path
     return sorted(unique.values(), key=lambda p: p.name.lower())
+
+
+def normalize_dashes(text: str) -> str:
+    return text.replace("\u2014", " - ")
+
+
+def find_pending_backlog_articles() -> list[Path]:
+    if not BACKLOG.is_dir():
+        return []
+    return [
+        p
+        for p in sorted(BACKLOG.glob("*.md"))
+        if not is_excluded_path(p) and p.name.lower() != "readme.md"
+    ]
+
+
+def find_pending_date_folder_articles() -> list[Path]:
+    pending: list[tuple[str, str, Path]] = []
+    if not ARTICLES_DIR.is_dir():
+        return []
+    for child in sorted(ARTICLES_DIR.iterdir()):
+        if not child.is_dir() or not DATE_FOLDER_RE.match(child.name):
+            continue
+        for path in sorted(child.glob("*.md")):
+            if is_excluded_path(path):
+                continue
+            pending.append((child.name, path.name.lower(), path))
+    pending.sort(key=lambda row: (row[0], row[1]))
+    return [path for _, _, path in pending]
+
+
+def find_pending_publish_articles() -> list[Path]:
+    """FIFO: Backlog first, then date-folder drafts (Carol's daily vault)."""
+    backlog = find_pending_backlog_articles()
+    if backlog:
+        return backlog
+    return find_pending_date_folder_articles()
+
+
+def update_frontmatter_published(path: Path, pub_date: str) -> None:
+    text = path.read_text(encoding="utf-8")
+    if not text.lstrip().startswith("---"):
+        return
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return
+    fm = parts[1]
+    if re.search(r"^published:\s*", fm, re.MULTILINE):
+        fm = re.sub(r"^published:\s*.*$", f"published: {pub_date}", fm, flags=re.MULTILINE)
+    else:
+        fm = fm.rstrip() + f"\npublished: {pub_date}\n"
+    path.write_text(f"---{fm}---{parts[2]}", encoding="utf-8")
+
+
+def publish_one_pending(live_date: date | None = None) -> dict[str, Any]:
+    """Move one vault draft to Stories-Used with today's live published date (ON004)."""
+    live = live_date or datetime.now(ET).date()
+    pub_str = live.isoformat()
+    pending = find_pending_publish_articles()
+    if not pending:
+        return {"published": None, "live_date": pub_str, "reason": "no pending drafts in Backlog or date folders"}
+    src = pending[0]
+    source_queue = "Backlog" if BACKLOG in src.parents else src.parent.name
+    update_frontmatter_published(src, pub_str)
+    STORIES_USED.mkdir(parents=True, exist_ok=True)
+    dest = STORIES_USED / src.name
+    if dest.exists():
+        return {"published": src.name, "live_date": pub_str, "source": source_queue, "error": "already in Stories-Used"}
+    shutil.move(str(src), str(dest))
+    manifest: list[dict[str, str]] = []
+    if MANIFEST_PATH.exists():
+        try:
+            manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            manifest = []
+    manifest.append(
+        {
+            "id": article_id(parse_frontmatter(dest.read_text(encoding="utf-8")), dest),
+            "filename": src.name,
+            "from": str(src),
+            "archived_at": datetime.now(UTC).isoformat(),
+            "live_date": pub_str,
+            "source_queue": source_queue,
+        }
+    )
+    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return {"published": src.name, "live_date": pub_str, "source": source_queue, "dest": str(dest)}
 
 
 def normalize_section(raw: str) -> str:
@@ -287,8 +382,8 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
     except OSError:
         return None
     meta = parse_frontmatter(text)
-    body = extract_body(text)
-    title = extract_title(meta, body, path)
+    body = normalize_dashes(extract_body(text))
+    title = normalize_dashes(extract_title(meta, body, path))
     slug = slug_from_path(path)
     if not title or len(body) < 80:
         return None
@@ -298,7 +393,7 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
     words = len(re.findall(r"\w+", body))
     read_minutes = max(1, round(words / 200))
     section = normalize_section(meta.get("section") or meta.get("category") or "News")
-    dek = (meta.get("dek") or "").strip() or title[:120]
+    dek = normalize_dashes((meta.get("dek") or "").strip() or title[:120])
     if re.search(r"\bsatire\b", dek, re.I):
         dek = title[:120]
     image_prompt = (meta.get("image_prompt") or "").strip()
@@ -317,8 +412,8 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
         "title": title,
         "dek": dek,
         "section": section,
-        "byline": (meta.get("byline") or "Staff").strip(),
-        "dateline": (meta.get("dateline") or "").strip(),
+        "byline": normalize_dashes((meta.get("byline") or "Staff").strip()),
+        "dateline": normalize_dashes((meta.get("dateline") or "").strip()),
         "kind": (meta.get("kind") or "news").strip(),
         "promo": (meta.get("promo") or "none").strip(),
         "promo_url": (meta.get("promo_url") or "").strip(),
@@ -438,7 +533,7 @@ def chrome_head(page_title: str, depth: int = 0, description: str = "", canonica
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="{meta_desc}" />
-  <title>{title} — {escape(BRAND)}</title>
+  <title>{title}  -  {escape(BRAND)}</title>
 {canonical}  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -597,7 +692,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
     return (
         chrome_head(
             "Home",
-            description=f"Satirical news from {BRAND} — published by {LEGAL_NAME}. {TAGLINE}",
+            description=f"Satirical news from {BRAND}  -  published by {LEGAL_NAME}. {TAGLINE}",
             canonical_path="",
         )
         + chrome_header(on_homepage=True)
@@ -626,7 +721,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
       <section class="community-notices">
         <h2 class="section-title">Community Notices</h2>
         <ul>
-          <li>East Millfield Neighbor Association — leaf blower détente talks continue.</li>
+          <li>East Millfield Neighbor Association  -  leaf blower détente talks continue.</li>
           <li>Library Scream Booth now accepts appointments through December.</li>
           <li>City crosswalk placebo buttons rated "surprisingly satisfying" in customer survey.</li>
         </ul>
@@ -716,14 +811,14 @@ def write_static_pages() -> None:
             "about.html",
             "About",
             ABOUT_HTML,
-            f"About {BRAND} — satirical news published by {LEGAL_NAME}. Portfolio hub: laughing-dragons.com.",
+            f"About {BRAND}  -  satirical news published by {LEGAL_NAME}. Portfolio hub: laughing-dragons.com.",
             "about.html",
         ),
         (
             "contact.html",
             "Contact",
             CONTACT_HTML,
-            f"Contact {BRAND} and {LEGAL_NAME} — tips, corrections, and studio inquiries.",
+            f"Contact {BRAND} and {LEGAL_NAME}  -  tips, corrections, and studio inquiries.",
             "contact.html",
         ),
         (
@@ -833,7 +928,10 @@ def archive_used(ingested: list[dict[str, Any]]) -> int:
     return moved
 
 
-def build_site(archive: bool = False) -> dict[str, Any]:
+def build_site(archive: bool = False, publish_one: bool = False) -> dict[str, Any]:
+    published_one: dict[str, Any] | None = None
+    if publish_one:
+        published_one = publish_one_pending()
     paths = collect_vault_paths()
     ingested: list[dict[str, Any]] = []
     for path in paths:
@@ -872,14 +970,26 @@ def build_site(archive: bool = False) -> dict[str, Any]:
     if archive:
         moved = archive_used(ingested)
 
-    return {"articles": len(ingested), "archived": moved, "paths_scanned": len(paths)}
+    return {
+        "articles": len(ingested),
+        "archived": moved,
+        "paths_scanned": len(paths),
+        "published_one": published_one,
+    }
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build The Associated Guess site from vault")
-    parser.add_argument("--archive-used", action="store_true", help="Move ingested date-folder files to Stories-Used")
+    parser.add_argument("--archive-used", action="store_true", help="Bulk-move all date-folder files to Stories-Used (legacy)")
+    parser.add_argument(
+        "--publish-one",
+        action="store_true",
+        help="Publish one pending vault draft with today's live ET date (ON004 default)",
+    )
     args = parser.parse_args()
-    result = build_site(archive=args.archive_used)
+    if args.archive_used and args.publish_one:
+        parser.error("Use --publish-one OR --archive-used, not both")
+    result = build_site(archive=args.archive_used, publish_one=args.publish_one)
     print(json.dumps(result, indent=2))
 
 
