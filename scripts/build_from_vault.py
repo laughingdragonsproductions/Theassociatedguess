@@ -42,6 +42,11 @@ SECTIONS = [
 BRAND = "The Associated Guess"
 TAGLINE = "SERIOUS NEWS. ABSURD WORLD."
 DOMAIN = "theassociatedguess.com"
+ADSENSE_PUBLISHER = "ca-pub-7048606415692002"
+CONTACT_EMAIL = "laughingdragonsproductions@gmail.com"
+LEGAL_NAME = "Laughing Dragons Productions"
+PARENT_SITE = "https://laughing-dragons.com"
+TIPS_EMAIL = f"tips@{DOMAIN}"
 
 ABOUT_HTML = """
 <p class="about-lede">The Associated Guess was founded on a conviction we have never apologized for: the country deserves hard-hitting journalism—clear-eyed, unsentimental, and unwilling to trade accuracy for access.</p>
@@ -50,7 +55,98 @@ ABOUT_HTML = """
 <p>We are independent. We are obsessive about craft. We believe the reader should finish an article slightly more informed and significantly more concerned than when they started—whether the subject is the economy, the climate, or the behavioral standards now expected of smart refrigerators.</p>
 <p>If something on our front page strikes you as unlikely, read it again. Read the quotes. Follow the logic. We trust you to draw your own conclusions. We have already drawn ours.</p>
 <p class="about-signature"><em>SERIOUS NEWS. ABSURD WORLD.</em> — The Editors</p>
-"""
+<section class="about-real">
+  <h2>Who publishes this</h2>
+  <p><strong>The Associated Guess</strong> is a satirical news property operated by <strong>{legal}</strong>, an independent media and maker studio. This site is part of the Laughing Dragons portfolio alongside games, tools, podcasts, and shop projects hosted at <a href="{parent}" rel="noopener">{parent_host}</a>.</p>
+  <p>Every headline here is fictional parody — written in deadpan news style, not reported as fact. We publish new stories daily. For tips, corrections, or rights questions, see our <a href="contact.html">Contact</a> page.</p>
+  <h2>More from Laughing Dragons</h2>
+  <ul>
+    <li><a href="{parent}" rel="noopener">Laughing Dragons Productions</a> — studio hub (games, kids show, tools, shop)</li>
+    <li><a href="https://chittinandchattin.com" rel="noopener">Chittin &amp; Chattin</a> — podcast</li>
+    <li><a href="{parent}/contact/" rel="noopener">Studio contact form</a> — general inquiries across the portfolio</li>
+  </ul>
+  <p>Publisher email: <a href="mailto:{email}">{email}</a></p>
+</section>
+""".format(
+    legal=LEGAL_NAME,
+    parent=PARENT_SITE,
+    parent_host=PARENT_SITE.replace("https://", ""),
+    email=CONTACT_EMAIL,
+)
+
+CONTACT_HTML = """
+<p>Reach the newsroom or the studio behind this site. <strong>The Associated Guess</strong> is published by <strong>{legal}</strong> (<a href="{parent}" rel="noopener">laughing-dragons.com</a>).</p>
+<h2>Newsroom tips</h2>
+<p>Story ideas, absurd local ordinances, and satire corrections: <a href="mailto:{tips}">{tips}</a> (routes to our studio inbox).</p>
+<h2>General inquiries</h2>
+<p><strong>{legal}</strong><br />
+Email: <a href="mailto:{email}">{email}</a><br />
+Studio hub: <a href="{parent}" rel="noopener">{parent_host}</a></p>
+<h2>What we can help with</h2>
+<ul>
+  <li>Corrections or attribution on a satire piece</li>
+  <li>Reprint and licensing questions</li>
+  <li>Site, privacy, or advertising issues</li>
+  <li>Other Laughing Dragons projects — games, podcast, shop, kids show</li>
+</ul>
+<p>For non-news studio mail, you may also use the <a href="{parent}/contact/" rel="noopener">Laughing Dragons contact form</a>.</p>
+""".format(
+    legal=LEGAL_NAME,
+    parent=PARENT_SITE,
+    parent_host=PARENT_SITE.replace("https://", ""),
+    tips=TIPS_EMAIL,
+    email=CONTACT_EMAIL,
+)
+
+PRIVACY_HTML = """
+<p><strong>Last updated:</strong> August 22, 2026</p>
+<p><strong>The Associated Guess</strong> is published by <strong>{legal}</strong> ("we," "us") at {domain}. This policy describes how we handle information when you visit the site. Our umbrella studio site is <a href="{parent}" rel="noopener">laughing-dragons.com</a>.</p>
+<h2>Information we collect</h2>
+<ul>
+  <li><strong>Server and analytics logs</strong> — IP address, browser type, pages viewed, and referrers collected by our host (GitHub Pages / Cloudflare).</li>
+  <li><strong>Contact email</strong> — if you email us, we receive your address and message contents.</li>
+  <li><strong>Cookies</strong> — set by Google AdSense and our hosting/CDN partners (see Advertising).</li>
+</ul>
+<h2>Advertising</h2>
+<p>We may show Google AdSense display ads on article pages and select editorial pages. We do not place ad units on legal pages (privacy, terms) or empty search results.</p>
+<p>Google AdSense may use cookies to serve ads based on your prior visits to this or other websites. Google's use of advertising cookies enables it and its partners to serve ads based on visits to our site and/or other sites on the Internet.</p>
+<p>You may opt out of personalized advertising via <a href="https://adssettings.google.com" rel="noopener">Google Ads Settings</a> or <a href="https://www.aboutads.info" rel="noopener">www.aboutads.info</a>.</p>
+<h2>Third-party services</h2>
+<ul>
+  <li><strong>Google AdSense</strong> — advertising (shared publisher account across Laughing Dragons portfolio sites)</li>
+  <li><strong>Cloudflare / GitHub Pages</strong> — hosting and delivery</li>
+  <li><strong>Google Fonts</strong> — typography (may log IP)</li>
+  <li><strong>Unsplash</strong> — editorial stock imagery linked from article pages</li>
+</ul>
+<h2>Contact</h2>
+<p>Questions: <a href="mailto:{email}">{email}</a> · Studio: <a href="{parent}/contact/" rel="noopener">{parent_host}/contact/</a></p>
+""".format(
+    legal=LEGAL_NAME,
+    domain=DOMAIN,
+    parent=PARENT_SITE,
+    parent_host=PARENT_SITE.replace("https://", ""),
+    email=CONTACT_EMAIL,
+)
+
+TERMS_HTML = """
+<p><strong>Last updated:</strong> August 22, 2026</p>
+<p><strong>The Associated Guess</strong> ({domain}) is a satirical news publication operated by <strong>{legal}</strong>. Stories are fictional parody and should not be read as factual reporting.</p>
+<h2>Use of the site</h2>
+<p>You may read and share links to our articles for personal, non-commercial use. Do not scrape, republish full articles, or misrepresent satire as real news.</p>
+<h2>Advertising</h2>
+<p>Third-party ads (including Google AdSense) may appear on some pages. We are not responsible for advertiser content. Do not click ads to artificially inflate revenue.</p>
+<h2>Disclaimer</h2>
+<p>All characters, quotes, and events described are invented unless explicitly labeled otherwise. No professional, legal, medical, or financial advice is offered.</p>
+<h2>Related sites</h2>
+<p>Other properties under {legal} include <a href="{parent}" rel="noopener">laughing-dragons.com</a> and linked portfolio sites. Each has its own terms where posted.</p>
+<h2>Contact</h2>
+<p><a href="mailto:{email}">{email}</a></p>
+""".format(
+    legal=LEGAL_NAME,
+    domain=DOMAIN,
+    parent=PARENT_SITE,
+    email=CONTACT_EMAIL,
+)
 
 
 def site_href(path: str, depth: int = 0) -> str:
@@ -233,36 +329,81 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
         "hero_image": hero_image,
         "thumb_image": thumb_image,
         "image_prompt": image_prompt,
+        "published": (meta.get("published") or "").strip(),
         "_num_id": numeric_id(aid),
     }
 
 
-def body_to_html(body: str) -> str:
-    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", body) if p.strip()]
+LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+
+
+def inline_markdown(text: str) -> str:
+    """Convert [label](url) to anchor tags; escape other text."""
     parts: list[str] = []
-    for para in paragraphs:
-        if para.startswith("#"):
+    last = 0
+    for match in LINK_RE.finditer(text):
+        if match.start() > last:
+            parts.append(escape(text[last : match.start()]))
+        label = escape(match.group(1))
+        url = html.escape(match.group(2).strip(), quote=True)
+        parts.append(f'<a href="{url}" rel="noopener">{label}</a>')
+        last = match.end()
+    if last < len(text):
+        parts.append(escape(text[last:]))
+    return "".join(parts) if parts else escape(text)
+
+
+def body_to_html(body: str) -> str:
+    blocks = [b.strip() for b in re.split(r"\n\s*\n", body) if b.strip()]
+    parts: list[str] = []
+    for block in blocks:
+        if block.startswith("## "):
+            parts.append(f'<h2 class="article-subhead">{escape(block[3:].strip())}</h2>')
             continue
-        parts.append(f"<p>{escape(para)}</p>")
+        lines = [ln.strip() for ln in block.splitlines() if ln.strip()]
+        if lines and all(ln.startswith("- ") for ln in lines):
+            items = "".join(f"<li>{inline_markdown(ln[2:])}</li>" for ln in lines)
+            parts.append(f"<ul class=\"article-list\">{items}</ul>")
+            continue
+        if block.startswith("#"):
+            continue
+        parts.append(f"<p>{inline_markdown(block)}</p>")
     return "\n".join(parts) if parts else f"<p>{escape(body[:500])}</p>"
 
 
 def assign_display_dates(articles: list[dict[str, Any]]) -> None:
-    articles.sort(key=lambda a: a["_num_id"] or 99999)
+    dated: list[dict[str, Any]] = []
+    undated: list[dict[str, Any]] = []
+    for article in articles:
+        pub = (article.get("published") or "").strip()
+        try:
+            if pub and len(pub) >= 10:
+                d = date.fromisoformat(pub[:10])
+                article["display_date"] = d.isoformat()
+                article["display_date_long"] = format_long_date(d)
+                dated.append(article)
+                continue
+        except ValueError:
+            pass
+        undated.append(article)
+
+    undated.sort(key=lambda a: a["_num_id"] or 99999)
     start = date(2026, 1, 2)
     end = date(2026, 8, 19)
     total_days = (end - start).days
-    n = len(articles)
-    if n <= 1:
-        if articles:
-            articles[0]["display_date"] = end.isoformat()
-            articles[0]["display_date_long"] = format_long_date(end)
-        return
-    for i, article in enumerate(articles):
-        offset = round(i * total_days / (n - 1))
-        d = start + timedelta(days=offset)
-        article["display_date"] = d.isoformat()
-        article["display_date_long"] = format_long_date(d)
+    n = len(undated)
+    if n == 1:
+        undated[0]["display_date"] = end.isoformat()
+        undated[0]["display_date_long"] = format_long_date(end)
+    elif n > 1:
+        for i, article in enumerate(undated):
+            offset = round(i * total_days / (n - 1))
+            d = start + timedelta(days=offset)
+            article["display_date"] = d.isoformat()
+            article["display_date_long"] = format_long_date(d)
+
+    articles.clear()
+    articles.extend(dated + undated)
     articles.sort(key=lambda a: a["display_date"], reverse=True)
 
 
@@ -278,21 +419,31 @@ def promo_footer(article: dict[str, Any]) -> str:
     return f'<p class="promo-link"><a href="{escape(url)}" rel="noopener">{escape(promo)}</a></p>'
 
 
-def chrome_head(page_title: str, depth: int = 0) -> str:
+def ad_slot_markup(key: str, extra_class: str = "") -> str:
+    cls = f"ad-slot {extra_class}".strip()
+    return f'<div class="{cls}" data-ad-slot="{escape(key)}"></div>'
+
+
+def chrome_head(page_title: str, depth: int = 0, description: str = "", canonical_path: str = "") -> str:
     title = escape(page_title)
+    meta_desc = escape(description or TAGLINE)
     root_attr = site_href("", depth).rstrip("/") or "."
     css = site_href("assets/css/paper.css", depth)
+    canonical = ""
+    if canonical_path:
+        canonical = f'  <link rel="canonical" href="https://{DOMAIN}/{canonical_path.lstrip("/")}" />\n'
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="{escape(TAGLINE)}" />
+  <meta name="description" content="{meta_desc}" />
   <title>{title} — {escape(BRAND)}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
+{canonical}  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{css}" />
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_PUBLISHER}" crossorigin="anonymous"></script>
 </head>
 <body data-site-root="{root_attr}">"""
 
@@ -339,12 +490,15 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False) -> str:
         for s in SECTIONS
     )
     js = site_href("assets/js/paper.js", depth)
+    config_js = site_href("assets/js/config.js", depth)
+    adsense_js = site_href("assets/js/adsense.js", depth)
     return f"""
 <footer class="site-footer">
   <div class="footer-grid">
     <div>
       <strong>{escape(BRAND)}</strong>
       <p class="footer-tagline">{escape(TAGLINE)}</p>
+      <p class="footer-parent">A <a href="{PARENT_SITE}" rel="noopener">{escape(LEGAL_NAME)}</a> property</p>
       <p class="footer-copy">© 2026 {escape(BRAND)} · {escape(DOMAIN)}</p>
     </div>
     <div>
@@ -356,11 +510,17 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False) -> str:
       <ul>
         <li><a href="{site_href("about.html", depth)}">About</a></li>
         <li><a href="{site_href("contact.html", depth)}">Contact</a></li>
+        <li><a href="{site_href("privacy.html", depth)}">Privacy</a></li>
+        <li><a href="{site_href("terms.html", depth)}">Terms</a></li>
         <li><a href="{home_anchor("newsletter", depth, on_homepage)}">Newsletter</a></li>
+        <li><a href="{PARENT_SITE}" rel="noopener">{escape(LEGAL_NAME)}</a></li>
       </ul>
     </div>
   </div>
+  {ad_slot_markup("footer", "ad-slot-footer")}
 </footer>
+<script src="{config_js}"></script>
+<script src="{adsense_js}"></script>
 <script src="{js}"></script>
 </body>
 </html>"""
@@ -435,7 +595,11 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
     )
 
     return (
-        chrome_head("Home")
+        chrome_head(
+            "Home",
+            description=f"Satirical news from {BRAND} — published by {LEGAL_NAME}. {TAGLINE}",
+            canonical_path="",
+        )
         + chrome_header(on_homepage=True)
         + f"""
 <main class="page-home">
@@ -492,6 +656,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
         </form>
         <p class="subscribe-cta newsletter-subscribe-note" data-feature="subscription" aria-hidden="true">Paid subscription coming soon.</p>
       </section>
+      {ad_slot_markup("sidebar", "ad-slot-sidebar")}
     </aside>
   </div>
 </main>
@@ -517,6 +682,7 @@ def generate_article_page(article: dict[str, Any]) -> str:
       <img src="{escape(article['hero_image'])}" alt="" />
     </figure>
     <div class="article-body">
+      {ad_slot_markup("inContent", "ad-slot-in-content")}
       {article['body_html']}
       {promo_footer(article)}
     </div>
@@ -545,18 +711,52 @@ def article_catalog_entry(article: dict[str, Any]) -> dict[str, Any]:
 
 
 def write_static_pages() -> None:
-    for name, title, body in [
-        ("about.html", "About", ABOUT_HTML),
-        ("contact.html", "Contact", "<p>tips@theassociatedguess.com · Millfield, probably.</p>"),
-    ]:
+    pages = [
+        (
+            "about.html",
+            "About",
+            ABOUT_HTML,
+            f"About {BRAND} — satirical news published by {LEGAL_NAME}. Portfolio hub: laughing-dragons.com.",
+            "about.html",
+        ),
+        (
+            "contact.html",
+            "Contact",
+            CONTACT_HTML,
+            f"Contact {BRAND} and {LEGAL_NAME} — tips, corrections, and studio inquiries.",
+            "contact.html",
+        ),
+        (
+            "privacy.html",
+            "Privacy Policy",
+            PRIVACY_HTML,
+            f"Privacy policy for {BRAND}, operated by {LEGAL_NAME}.",
+            "privacy.html",
+        ),
+        (
+            "terms.html",
+            "Terms of Service",
+            TERMS_HTML,
+            f"Terms of service for {BRAND} satirical news.",
+            "terms.html",
+        ),
+    ]
+    for name, title, body, description, canonical in pages:
         path = SITE / name
         path.write_text(
-            chrome_head(title) + chrome_header(on_homepage=False) + f"<main class='page-static'><h1>{escape(title)}</h1>{body}</main>" + chrome_footer(on_homepage=False),
+            chrome_head(title, description=description, canonical_path=canonical)
+            + chrome_header(on_homepage=False)
+            + f"<main class='page-static'><h1>{escape(title)}</h1>{body}</main>"
+            + chrome_footer(on_homepage=False),
             encoding="utf-8",
         )
     search_path = SITE / "search.html"
     search_path.write_text(
-        chrome_head("Search")
+        chrome_head(
+            "Search",
+            description=f"Search the {BRAND} archive of satirical news stories.",
+            canonical_path="search.html",
+        )
         + chrome_header(on_homepage=False)
         + """
 <main class="page-search">
@@ -571,6 +771,32 @@ def write_static_pages() -> None:
         + chrome_footer(on_homepage=False),
         encoding="utf-8",
     )
+
+
+def write_robots_txt() -> None:
+    (SITE / "robots.txt").write_text(
+        f"User-agent: *\nAllow: /\n\nSitemap: https://{DOMAIN}/sitemap.xml\n",
+        encoding="utf-8",
+    )
+
+
+def write_sitemap(articles: list[dict[str, Any]]) -> None:
+    urls = [
+        f"https://{DOMAIN}/",
+        f"https://{DOMAIN}/about.html",
+        f"https://{DOMAIN}/contact.html",
+        f"https://{DOMAIN}/privacy.html",
+        f"https://{DOMAIN}/terms.html",
+        f"https://{DOMAIN}/search.html",
+    ]
+    for article in articles:
+        urls.append(f"https://{DOMAIN}/article/{article['slug']}/")
+    body = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    body += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    for url in urls:
+        body += f"  <url><loc>{escape(url)}</loc></url>\n"
+    body += "</urlset>\n"
+    (SITE / "sitemap.xml").write_text(body, encoding="utf-8")
 
 
 def archive_used(ingested: list[dict[str, Any]]) -> int:
@@ -628,6 +854,8 @@ def build_site(archive: bool = False) -> dict[str, Any]:
     (SITE / "index.html").write_text(generate_index(ingested), encoding="utf-8")
     (SITE / "CNAME").write_text(f"{DOMAIN}\n", encoding="utf-8")
     write_static_pages()
+    write_robots_txt()
+    write_sitemap(ingested)
     for article in ingested:
         adir = SITE / "article" / article["slug"]
         adir.mkdir(parents=True, exist_ok=True)
