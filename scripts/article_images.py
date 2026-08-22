@@ -3,74 +3,125 @@
 from __future__ import annotations
 
 import re
+import urllib.error
+import urllib.request
 from typing import Any
 
-# Unsplash photo IDs (license-free). Multiple variants per topic for variety.
+# Verified Unsplash photo IDs (GET-tested). Do not add IDs without running validate_images.py.
+VERIFIED_PHOTO_IDS: frozenset[str] = frozenset(
+    {
+        "1461988320302-91bde64fc8e4",
+        "1514888286974-6c03e2ca1dba",
+        "1552053831-71594a27632d",
+        "1548199973-03cce0bbc87b",
+        "1558618666-fcd25c85cd64",
+        "1558642452-9d2a7deb7f62",
+        "1444464666168-49d633b86797",
+        "1534438327276-14e5300c3a48",
+        "1497366216548-37526070297c",
+        "1552664730-d307ca884978",
+        "1556761175-b413da4baf72",
+        "1553877522-43269d4ea984",
+        "1512941937669-90a1b58e7e9c",
+        "1516321318423-f06f85e504b3",
+        "1556909114-f6e7ad7d3136",
+        "1503676260728-1c00da094a0b",
+        "1562774053-701939374585",
+        "1581091226825-a6a2a5aee158",
+        "1519741497674-611481863552",
+        "1518770660439-4636190af475",
+        "1551288049-bebda4e38f71",
+        "1460925895917-afdab827c52f",
+        "1564013799919-ab600027ffc6",
+        "1449824913935-59a10b8d2000",
+        "1600880292203-757bb62b4baf",
+        "1500530855697-b586d89ba3ee",
+        "1506905925346-21bda4d32df4",
+        "1586528116311-ad8dd3c8310d",
+        "1504711434969-e33886168f5c",
+        "1565299624946-b28f40a0ae38",
+        "1635070041078-e363dbe005cb",
+        "1507003211169-0a1dd7228f2d",
+        "1521587760476-6c12a4b040da",
+        "1541961017774-22349e4a1262",
+        "1522071820081-009f0129c71c",
+        "1472214103451-9374bd1c798e",
+        "1504384308090-c894fdcc538d",
+        "1560472354-b33ff0c44a43",
+        "1582719478250-c89cae4dc85b",
+        "1618005182384-a83a8bd57fbe",
+        "1621905252507-b35492cc74b4",
+        "1571019613454-1cb2f99b2d8b",
+    }
+)
+
+FALLBACK_PHOTO = "1461988320302-91bde64fc8e4"
+
 IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "cat",
         "keywords": ["cat", "cats", "feline", "tabby", "kitten", "meow", "pancake"],
-        "photos": ["1514888286974-6c03e2ca1dba", "1574158622682-6b3884f9f2a1", "1495360012281-59ab365573e7"],
+        "photos": ["1514888286974-6c03e2ca1dba"],
     },
     {
         "id": "dog",
         "keywords": ["dog", "retriever", "mayor", "dalmatian", "puppy", "canine", "spot"],
-        "photos": ["1552053831-71594a27632d", "1548199973-03cce0bbc87b", "1587300003388-59208fb9627d"],
+        "photos": ["1552053831-71594a27632d", "1548199973-03cce0bbc87b"],
     },
     {
         "id": "squirrel",
         "keywords": ["squirrel", "squirrels", "rodent"],
-        "photos": ["1425087651642-229b496b4956", "1558618666-fcd25c85cd64"],
+        "photos": ["1558618666-fcd25c85cd64"],
     },
     {
         "id": "hamster",
         "keywords": ["hamster", "vampire", "bakery rodent"],
-        "photos": ["1548767797-daf760e35424", "1509440154316-774875420890"],
+        "photos": ["1565299624946-b28f40a0ae38", "1541961017774-22349e4a1262"],
     },
     {
         "id": "bee",
         "keywords": ["bee", "bees", "honey", "hive", "heist"],
-        "photos": ["1558642452-9d2a7deb7f62", "1587049359896-3eaa5bca0f63"],
+        "photos": ["1558642452-9d2a7deb7f62", "1472214103451-9374bd1c798e"],
     },
     {
         "id": "butterfly",
         "keywords": ["butterfly", "butterflies", "lepidoptera"],
-        "photos": ["1452574810820-3364f33ef134", "1526333289474-3d1146c939a7"],
+        "photos": ["1472214103451-9374bd1c798e", "1558618666-fcd25c85cd64"],
     },
     {
         "id": "bird",
         "keywords": ["pigeon", "pigeons", "bird", "birds"],
-        "photos": ["1552728087-52d9acf1ba96", "1444464666168-49d633b86797"],
+        "photos": ["1444464666168-49d633b86797"],
     },
     {
         "id": "fish",
         "keywords": ["fish", "tank", "aquarium", "aquatic"],
-        "photos": ["1522069169874-58c6837614e6", "1544551761-7873614b3403"],
+        "photos": ["1472214103451-9374bd1c798e"],
     },
     {
         "id": "ghost",
         "keywords": ["ghost", "ghosts", "haunt", "spooky", "sheet", "specter", "paranormal"],
-        "photos": ["1509249900867-e780eee44f7a", "1518709268805-4e9042f9a960", "1516975086484-de6f8668ba56"],
+        "photos": ["1507003211169-0a1dd7228f2d", "1618005182384-a83a8bd57fbe"],
     },
     {
         "id": "ufo",
         "keywords": ["ufo", "alien", "aliens", "nebraska", "object", "invasion", "extraterrestrial"],
-        "photos": ["1419242901074-263e57524453", "1446776877081-d282765f29e0", "1454789548928-9efa44db849e"],
+        "photos": ["1618005182384-a83a8bd57fbe", "1635070041078-e363dbe005cb"],
     },
     {
         "id": "space",
         "keywords": ["space", "moon", "galactic", "planet", "orbit", "astronaut", "cosmos", "solar"],
-        "photos": ["1446776653964-39c2d0770fea", "1454789548928-9efa44db849e", "1419242901074-263e57524453"],
+        "photos": ["1618005182384-a83a8bd57fbe", "1635070041078-e363dbe005cb", "1506905925346-21bda4d32df4"],
     },
     {
         "id": "gym",
         "keywords": ["gym", "fitness", "membership", "workout", "running shoes", "exercise"],
-        "photos": ["1534438327276-14e5300c3a48", "1571902940602-82c3b3810016"],
+        "photos": ["1534438327276-14e5300c3a48"],
     },
     {
         "id": "office",
         "keywords": ["office", "cubicle", "worker", "corporate", "hr", "exhausted", "calendar", "tasks", "break room", "crayons"],
-        "photos": ["1497366216548-37526070297c", "1552664730-d307ca884978", "1484486569610-79e06ccb259f"],
+        "photos": ["1497366216548-37526070297c", "1552664730-d307ca884978", "1522071820081-009f0129c71c"],
     },
     {
         "id": "meeting",
@@ -85,146 +136,145 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "smart_home",
         "keywords": ["alexa", "speaker", "smart speaker", "fridge", "refrigerator", "leftover", "leftovers", "kitchen counter"],
-        "photos": ["1556909114-f6e7ad7d3136", "1556911221-bff31c812dba"],
+        "photos": ["1556909114-f6e7ad7d3136", "1504384308090-c894fdcc538d"],
     },
     {
         "id": "school",
         "keywords": ["school", "student", "detention", "headphones", "podcast", "teacher", "high school"],
-        "photos": ["1503676260728-1c00da094a0b", "1523050855928-8d8e4d2456f8"],
+        "photos": ["1503676260728-1c00da094a0b"],
     },
     {
         "id": "college",
         "keywords": ["college", "university", "classroom", "professor", "meme", "lecture", "campus"],
-        "photos": ["1523050855928-8d8e4d2456f8", "1562774053-701939374585"],
+        "photos": ["1562774053-701939374585", "1503676260728-1c00da094a0b"],
     },
     {
         "id": "fire",
         "keywords": ["fire", "firefighter", "fire truck", "dalmatian vest", "fire department"],
-        "photos": ["1545558017881-5d0f4a0706b3", "1581091226825-a6a2a5aee158"],
+        "photos": ["1581091226825-a6a2a5aee158", "1548199973-03cce0bbc87b"],
     },
     {
         "id": "wedding",
         "keywords": ["wedding", "bride", "groom", "marriage", "regret", "binder", "planner"],
-        "photos": ["1519741497674-611481863552", "1465497426033-626f29ec474f"],
+        "photos": ["1519741497674-611481863552"],
     },
     {
         "id": "tech",
         "keywords": ["tech", "ceo", "ai", "spreadsheet", "software", "digital", "virtual", "crypto", "currency", "furniture", "pumpkin carving"],
-        "photos": ["1518770660439-4636190af475", "1551288049-bebda4e38f71", "1592478841-608e4683a849"],
+        "photos": ["1518770660439-4636190af475", "1551288049-bebda4e38f71", "1618005182384-a83a8bd57fbe"],
     },
     {
         "id": "grocery",
         "keywords": ["grocery", "supermarket", "checkout", "store", "shopper", "pumpkin", "gourd", "gourds", "fall display"],
-        "photos": ["1578916170965-d72f4c299e36", "1509042237870-99d41d685e73"],
+        "photos": ["1461988320302-91bde64fc8e4", "1565299624946-b28f40a0ae38"],
     },
     {
         "id": "government",
         "keywords": ["council", "mayor", "congress", "hearing", "election", "vote", "law", "ordinance", "city hall", "pentagon", "government"],
-        "photos": ["1541873673006-4e322d87a781", "1559825498-0368e0f12623"],
+        "photos": ["1449824913935-59a10b8d2000", "1522071820081-009f0129c71c"],
     },
     {
         "id": "economy",
         "keywords": ["economist", "stock", "portfolio", "market", "trader", "finance", "chart", "equity", "ambivalence"],
-        "photos": ["1611974789855-9c98a795bf08", "1460925895917-afdab827c52f"],
+        "photos": ["1460925895917-afdab827c52f", "1551288049-bebda4e38f71"],
     },
     {
         "id": "suburban",
         "keywords": ["neighbor", "leaf blower", "porch", "suburban", "street", "7 a.m", "leaves"],
-        "photos": ["1564013799919-ab600027ffc6", "1449848741920-346efe7e407a"],
+        "photos": ["1564013799919-ab600027ffc6"],
     },
     {
         "id": "city",
         "keywords": ["crosswalk", "pedestrian", "button", "traffic", "road rage", "clipboard", "driver", "parking", "crosswalk"],
-        "photos": ["1449824913935-59a10b8d2000", "1449965406639-454133f5a0f5", "1519005035164-e7a7443ef573"],
+        "photos": ["1449824913935-59a10b8d2000", "1564013799919-ab600027ffc6"],
     },
     {
         "id": "health",
         "keywords": ["cdc", "fda", "drug", "pill", "health", "guidance", "grass safely", "public health", "poster"],
-        "photos": ["1576091160399-112ba8d25d1f", "1558907353-1953d9338f55"],
+        "photos": ["1571019613454-1cb2f99b2d8b", "1506905925346-21bda4d32df4"],
     },
     {
         "id": "video_call",
         "keywords": ["video conference", "camera-on", "zoom", "togetherness", "grid", "remote", "webcam"],
-        "photos": ["1600880292203-757bb62b4baf", "1588196749597-9bc252f87de2"],
+        "photos": ["1600880292203-757bb62b4baf"],
     },
     {
         "id": "fair",
         "keywords": ["fair", "fairground", "contest", "judges", "scorecard", "overthinking", "carnival"],
-        "photos": ["1566576919021-49a5497e8d11", "1500530855697-b586d89ba3ee"],
+        "photos": ["1500530855697-b586d89ba3ee"],
     },
     {
         "id": "museum",
         "keywords": ["museum", "exhibit", "gallery", "password", "sticky note", "kiosk"],
-        "photos": ["1568665797760-0813f7a96991", "1518998053901-7c588e83d962"],
+        "photos": ["1541961017774-22349e4a1262"],
     },
     {
         "id": "park",
         "keywords": ["national park", "trail", "hiker", "mountain", "existential", "park", "city park"],
-        "photos": ["1506905925346-21bda4d32df4", "1464822759023-fed6222852fc"],
+        "photos": ["1506905925346-21bda4d32df4", "1472214103451-9374bd1c798e"],
     },
     {
         "id": "airline",
         "keywords": ["airline", "airplane", "cabin", "boarding pass", "flight", "economy", "regret"],
-        "photos": ["1436491862712-8296e69db914", "1583608205776-dfd35f0c9ab5"],
+        "photos": ["1504384308090-c894fdcc538d", "1582719478250-c89cae4dc85b"],
     },
     {
         "id": "weather",
         "keywords": ["weather", "rain", "drizzle", "forecast", "gray sky", "cloud", "window", "coffee cup"],
-        "photos": ["1515694342877-7d8c67f5c9b9", "1428908728789-a62ee3840689"],
+        "photos": ["1507003211169-0a1dd7228f2d", "1560472354-b33ff0c44a43"],
     },
     {
         "id": "library",
         "keywords": ["library", "study room", "screaming", "acoustic", "books", "read", "reading"],
-        "photos": ["1481627834876-b78344385afd", "1507842217343-583154707686"],
+        "photos": ["1521587760476-6c12a4b040da"],
     },
     {
         "id": "delivery",
         "keywords": ["postal", "package", "delivery", "tracking", "truck", "mail", "when we get there"],
-        "photos": ["1566576721346-7c0a8c8b4937", "1586528116311-ad8dd3c8310d"],
+        "photos": ["1586528116311-ad8dd3c8310d"],
     },
     {
         "id": "newsroom",
         "keywords": ["newsroom", "whiteboard", "editor", "journalism", "vault", "tally", "50-article"],
-        "photos": ["1504711434969-e33886168f5c", "1495026682319-66bb9ca0c4e2"],
+        "photos": ["1504711434969-e33886168f5c", "1461988320302-91bde64fc8e4"],
     },
     {
         "id": "board_game",
         "keywords": ["board game", "rulebook", "dice", "tabletop", "players"],
-        "photos": ["1611375854745-5b8a41e4e149", "1606166188517-6a103050ea16"],
+        "photos": ["1522071820081-009f0129c71c", "1500530855697-b586d89ba3ee"],
     },
     {
         "id": "food",
         "keywords": ["bakery", "bread", "muffin", "sausage", "sandwich", "sushi", "food", "pastry"],
-        "photos": ["1509440154316-774875420890", "1579584425559-d4725e0b88f2", "1565299624946-b28f40a0ae38"],
+        "photos": ["1565299624946-b28f40a0ae38", "1461988320302-91bde64fc8e4"],
     },
     {
         "id": "bike",
         "keywords": ["bike", "bicycle", "space bike", "cycling"],
-        "photos": ["1571333250630-f0230c146854", "1485968579580-b5d5502c4f67"],
+        "photos": ["1558618666-fcd25c85cd64", "1449824913935-59a10b8d2000"],
     },
     {
         "id": "video",
         "keywords": ["viral", "video contest", "social media", "filming"],
-        "photos": ["1492691527719-9d1e07e534b6", "1611162616475-46b635cb6848"],
+        "photos": ["1516321318423-f06f85e504b3", "1600880292203-757bb62b4baf"],
     },
     {
         "id": "science",
         "keywords": ["scientist", "research", "gravity", "physics", "time travel", "warming", "study", "peer-reviewed", "telescope"],
-        "photos": ["153209434978-654e1123e9c7", "1635070041078-e363dbe005cb", "1446774269880-aa4c194e726a"],
+        "photos": ["1635070041078-e363dbe005cb", "1618005182384-a83a8bd57fbe"],
     },
     {
         "id": "eco",
         "keywords": ["eco-friendly", "energy", "environment", "green", "sustainable"],
-        "photos": ["1473341304170-fd89c7bc2ded", "1542601906990-b4e3ba7a8f08"],
+        "photos": ["1472214103451-9374bd1c798e", "1506905925346-21bda4d32df4"],
     },
     {
         "id": "leprechaun",
         "keywords": ["leprechaun", "leprechauns", "irish", "gold coin"],
-        "photos": ["1516975086484-de6f8668ba56", "1558618666-fcd25c85cd64"],
+        "photos": ["1500530855697-b586d89ba3ee", "1621905252507-b35492cc74b4"],
     },
 ]
 
-# Hard overrides for titles/slugs where keyword scoring still misfires.
 SLUG_OVERRIDES: dict[str, str] = {
     "ghost-parking": "ghost",
     "city-council-approves-new-ghost-parking-ordinance": "ghost",
@@ -279,6 +329,22 @@ def _unsplash(photo_id: str, width: int, height: int) -> str:
     )
 
 
+def _sanitize_photos(photos: list[str]) -> list[str]:
+    clean = [p for p in photos if p in VERIFIED_PHOTO_IDS]
+    return clean or [FALLBACK_PHOTO]
+
+
+def _validate_topic_photos() -> None:
+    for topic in IMAGE_TOPICS:
+        topic["photos"] = _sanitize_photos(topic["photos"])
+        unknown = set(topic.get("photos", [])) - VERIFIED_PHOTO_IDS
+        if unknown:
+            raise ValueError(f"Topic {topic['id']} has unverified photos: {unknown}")
+
+
+_validate_topic_photos()
+
+
 def _tokens(text: str) -> set[str]:
     return set(TOKEN_RE.findall(text.lower()))
 
@@ -291,7 +357,7 @@ def _topic_by_id(topic_id: str) -> dict[str, Any] | None:
 
 
 def _pick_photo(topic: dict[str, Any], seed: str) -> str:
-    photos = topic["photos"]
+    photos = _sanitize_photos(topic["photos"])
     idx = sum(ord(c) for c in seed) % len(photos)
     return photos[idx]
 
@@ -315,6 +381,15 @@ def _score_topic(topic: dict[str, Any], prompt_text: str, body_text: str) -> int
     return score
 
 
+def photo_url_reachable(url: str, timeout: float = 12.0) -> bool:
+    req = urllib.request.Request(url, method="GET", headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.status < 400
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        return False
+
+
 def pick_article_images(
     *,
     article_id: str,
@@ -326,8 +401,6 @@ def pick_article_images(
     image_prompt: str = "",
 ) -> tuple[str, str]:
     """Return (hero_url, thumb_url) best matching the article concept."""
-    custom_hero = ""
-    custom_thumb = ""
     if image_prompt.startswith("http://") or image_prompt.startswith("https://"):
         return image_prompt, image_prompt
 
@@ -360,6 +433,4 @@ def pick_article_images(
         best_topic = _topic_by_id(fallback_id) or IMAGE_TOPICS[0]
 
     photo = _pick_photo(best_topic, article_id or slug)
-    hero = custom_hero or _unsplash(photo, 800, 500)
-    thumb = custom_thumb or _unsplash(photo, 400, 300)
-    return hero, thumb
+    return _unsplash(photo, 800, 500), _unsplash(photo, 400, 300)
