@@ -112,7 +112,7 @@ PRIVACY_HTML = """
   <li><strong>Cookies</strong>  -  set by Google AdSense and our hosting/CDN partners (see Advertising).</li>
 </ul>
 <h2>Advertising</h2>
-<p>We may show Google AdSense display ads on article pages and select editorial pages. We do not place ad units on legal pages (privacy, terms) or empty search results.</p>
+<p>We may show Google AdSense display ads in the site header and footer on editorial pages, and one display unit below the hero image on article pages. We do not place ad units inside article body text, sidebars, legal pages (privacy, terms), or empty search results.</p>
 <p>Google AdSense may use cookies to serve ads based on your prior visits to this or other websites. Google's use of advertising cookies enables it and its partners to serve ads based on visits to our site and/or other sites on the Internet.</p>
 <p>You may opt out of personalized advertising via <a href="https://adssettings.google.com" rel="noopener">Google Ads Settings</a> or <a href="https://www.aboutads.info" rel="noopener">www.aboutads.info</a>.</p>
 <h2>Third-party services</h2>
@@ -543,13 +543,14 @@ def chrome_head(page_title: str, depth: int = 0, description: str = "", canonica
 <body data-site-root="{root_attr}">"""
 
 
-def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = False) -> str:
+def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = False, show_ads: bool = True) -> str:
     today = datetime.now().strftime("%A, %B %d, %Y").replace(" 0", " ")
     home = site_href("index.html", depth)
     nav_items = "".join(
         f'<a href="{home_anchor(s.lower().replace(" ", "-"), depth, on_homepage)}" class="nav-link{" active" if s == active_section else ""}">{escape(s)}</a>'
         for s in SECTIONS
     )
+    header_ad = ad_slot_markup("header", "ad-slot-header") if show_ads else ""
     return f"""
 <header class="site-header">
   <div class="utility-bar">
@@ -576,10 +577,11 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
     {nav_items}
     <button type="button" class="nav-toggle" aria-label="Menu">☰</button>
   </nav>
-</header>"""
+</header>
+{header_ad}"""
 
 
-def chrome_footer(depth: int = 0, on_homepage: bool = False) -> str:
+def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = True) -> str:
     section_links = "".join(
         f'<li><a href="{home_anchor(s.lower().replace(" ", "-"), depth, on_homepage)}">{escape(s)}</a></li>'
         for s in SECTIONS
@@ -587,6 +589,7 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False) -> str:
     js = site_href("assets/js/paper.js", depth)
     config_js = site_href("assets/js/config.js", depth)
     adsense_js = site_href("assets/js/adsense.js", depth)
+    footer_ad = ad_slot_markup("footer", "ad-slot-footer") if show_ads else ""
     return f"""
 <footer class="site-footer">
   <div class="footer-grid">
@@ -612,7 +615,7 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False) -> str:
       </ul>
     </div>
   </div>
-  {ad_slot_markup("footer", "ad-slot-footer")}
+  {footer_ad}
 </footer>
 <script src="{config_js}"></script>
 <script src="{adsense_js}"></script>
@@ -751,7 +754,6 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
         </form>
         <p class="subscribe-cta newsletter-subscribe-note" data-feature="subscription" aria-hidden="true">Paid subscription coming soon.</p>
       </section>
-      {ad_slot_markup("sidebar", "ad-slot-sidebar")}
     </aside>
   </div>
 </main>
@@ -776,8 +778,8 @@ def generate_article_page(article: dict[str, Any]) -> str:
     <figure class="article-hero">
       <img src="{escape(article['hero_image'])}" alt="" />
     </figure>
+    {ad_slot_markup("inContent", "ad-slot-in-content")}
     <div class="article-body">
-      {ad_slot_markup("inContent", "ad-slot-in-content")}
       {article['body_html']}
       {promo_footer(article)}
     </div>
@@ -838,11 +840,12 @@ def write_static_pages() -> None:
     ]
     for name, title, body, description, canonical in pages:
         path = SITE / name
+        show_ads = name not in {"privacy.html", "terms.html"}
         path.write_text(
             chrome_head(title, description=description, canonical_path=canonical)
-            + chrome_header(on_homepage=False)
+            + chrome_header(on_homepage=False, show_ads=show_ads)
             + f"<main class='page-static'><h1>{escape(title)}</h1>{body}</main>"
-            + chrome_footer(on_homepage=False),
+            + chrome_footer(on_homepage=False, show_ads=show_ads),
             encoding="utf-8",
         )
     search_path = SITE / "search.html"
@@ -852,7 +855,7 @@ def write_static_pages() -> None:
             description=f"Search the {BRAND} archive of satirical news stories.",
             canonical_path="search.html",
         )
-        + chrome_header(on_homepage=False)
+        + chrome_header(on_homepage=False, show_ads=False)
         + """
 <main class="page-search">
   <header class="search-page-header">
@@ -863,7 +866,7 @@ def write_static_pages() -> None:
   <ol id="search-results" class="search-results"></ol>
 </main>
 """
-        + chrome_footer(on_homepage=False),
+        + chrome_footer(on_homepage=False, show_ads=False),
         encoding="utf-8",
     )
 
