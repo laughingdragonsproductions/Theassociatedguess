@@ -362,6 +362,13 @@ def normalize_section(raw: str) -> str:
     return "News"
 
 
+def parse_frontmatter_flag(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    token = str(value or "").strip().lower()
+    return token in {"true", "yes", "1", "front", "breaking", "featured", "on"}
+
+
 def is_junk_article(title: str, body: str, slug: str) -> bool:
     if re.search(r"\bsatire\b", title, re.I):
         return True
@@ -425,6 +432,8 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
         "thumb_image": thumb_image,
         "image_prompt": image_prompt,
         "published": (meta.get("published") or "").strip(),
+        "featured": parse_frontmatter_flag(meta.get("featured")),
+        "trending": parse_frontmatter_flag(meta.get("trending")),
         "_num_id": numeric_id(aid),
     }
 
@@ -738,16 +747,91 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = Tr
 
 def render_card(article: dict[str, Any], size: str = "small", depth: int = 0) -> str:
     url = article_href(article["slug"], depth)
+    head_tag = "h2" if size in {"medium", "large"} else "h3"
     return f"""
 <article class="story-card story-card-{size}">
   <a href="{url}" class="story-thumb-link">
     <img src="{escape(article['thumb_image'])}" alt="" loading="lazy" class="story-thumb" />
   </a>
   <p class="story-kicker">{escape(article['section'].upper())}</p>
-  <h3 class="story-headline"><a href="{url}">{escape(article['title'])}</a></h3>
+  <{head_tag} class="story-headline"><a href="{url}">{escape(article['title'])}</a></{head_tag}>
   <p class="story-dek">{escape(article['dek'][:140])}</p>
   <p class="story-meta">By {escape(article['byline'])} · {escape(article['display_date_long'])} · {article['read_minutes']} min read</p>
 </article>"""
+
+
+def featured_priority(article: dict[str, Any], today_iso: str) -> tuple[int, int, int]:
+    """Higher sorts first: explicit featured, posted today, then recency."""
+    score = 0
+    if article.get("featured"):
+        score += 1000
+    if article.get("display_date") == today_iso:
+        score += 500
+    if article.get("trending"):
+        score += 200
+    try:
+        day_ord = date.fromisoformat(article["display_date"]).toordinal()
+    except (KeyError, ValueError, TypeError):
+        day_ord = 0
+    return (score, day_ord, article.get("_num_id") or 0)
+
+
+def pick_homepage_featured(
+    articles: list[dict[str, Any]], *, limit: int = 4, today: date | None = None
+) -> list[dict[str, Any]]:
+    today = today or date.today()
+    today_iso = today.isoformat()
+    ranked = sorted(
+        [a for a in articles if a.get("title") and a.get("slug")],
+        key=lambda a: featured_priority(a, today_iso),
+        reverse=True,
+    )
+    return ranked[:limit]
+
+
+def featured_badge(article: dict[str, Any], today_iso: str) -> str:
+    if article.get("featured"):
+        return '<span class="featured-badge">Featured</span>'
+    if article.get("display_date") == today_iso:
+        return '<span class="featured-badge featured-badge-today">Posted today</span>'
+    return ""
+
+
+def render_fold_hero(article: dict[str, Any], depth: int = 0, *, today_iso: str = "") -> str:
+    url = article_href(article["slug"], depth)
+    badge = featured_badge(article, today_iso)
+    badge_html = f"    {badge}\n" if badge else ""
+    return f"""
+<div class="hero-layout">
+  <a href="{url}"><img src="{escape(article['hero_image'])}" alt="" class="story-thumb" /></a>
+  <div>
+{badge_html}    <p class="story-kicker">{escape(article['section'].upper())}</p>
+    <h2 class="story-headline"><a href="{url}">{escape(article['title'])}</a></h2>
+    <p class="story-dek">{escape(article['dek'])}</p>
+    <p class="story-meta">By {escape(article['byline'])} · {escape(article['display_date_long'])} · {article['read_minutes']} min read</p>
+  </div>
+</div>"""
+
+
+def render_featured_section(articles: list[dict[str, Any]], depth: int = 0) -> str:
+    featured = pick_homepage_featured(articles)
+    if not featured:
+        return ""
+    today_iso = date.today().isoformat()
+    hero_html = render_fold_hero(featured[0], depth, today_iso=today_iso)
+    grid_html = "".join(render_card(a, "medium", depth) for a in featured[1:4])
+    subtitle = ""
+    if featured[0].get("featured") or featured[0].get("display_date") == today_iso:
+        subtitle = '<p class="featured-lede">Lead story · updated for today\'s front page</p>'
+    return f"""
+<section class="featured-section" aria-label="Featured">
+  <div class="featured-header">
+    <h2 class="section-title">Featured</h2>
+    {subtitle}
+  </div>
+  <div id="fold-hero" class="fold-hero shell">{hero_html}</div>
+  <div id="fold-grid" class="fold-grid shell">{grid_html}</div>
+</section>"""
 
 
 def render_trending_list(articles: list[dict[str, Any]], limit: int = 5, depth: int = 0) -> str:
@@ -780,8 +864,75 @@ def render_archive(articles: list[dict[str, Any]], depth: int = 0) -> str:
     return "\n".join(chunks)
 
 
+def render_related_item(article: dict[str, Any], depth: int = 0) -> str:
+    url = article_href(article["slug"], depth)
+    return f"""
+<a class="related-item" href="{url}">
+  <img src="{escape(article['thumb_image'])}" alt="" loading="lazy" class="related-thumb" />
+  <span class="related-kicker">{escape(article['section'].upper())}</span>
+  <span class="related-title">{escape(article['title'])}</span>
+</a>"""
+
+
+def related_rank_key(current: dict[str, Any], candidate: dict[str, Any]) -> tuple[int, int, str]:
+    score = 0
+    if candidate.get("section") == current.get("section"):
+        score += 100
+    if candidate.get("byline") == current.get("byline"):
+        score += 20
+    cur_tokens = set((current.get("slug") or "").split("-"))
+    cand_tokens = set((candidate.get("slug") or "").split("-"))
+    score += len(cur_tokens & cand_tokens) * 15
+    try:
+        day_ord = date.fromisoformat(candidate["display_date"]).toordinal()
+    except (KeyError, ValueError, TypeError):
+        day_ord = 0
+    return (score, day_ord, candidate.get("slug") or "")
+
+
+def pick_related_articles(
+    current: dict[str, Any],
+    all_articles: list[dict[str, Any]],
+    *,
+    per_side: int = 4,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    candidates = [a for a in all_articles if a.get("slug") and a["slug"] != current.get("slug")]
+    ranked = sorted(candidates, key=lambda a: related_rank_key(current, a), reverse=True)
+    left = ranked[:per_side]
+    used = {a["slug"] for a in left}
+    right = [a for a in ranked if a["slug"] not in used][:per_side]
+    return left, right
+
+
+def render_related_rail(
+    articles: list[dict[str, Any]], depth: int, heading: str, extra_class: str = ""
+) -> str:
+    if not articles:
+        return ""
+    cls = f"article-rail {extra_class}".strip()
+    items = "".join(render_related_item(a, depth) for a in articles)
+    return f"""
+<aside class="{cls}" aria-label="{escape(heading)}">
+  <h2 class="related-heading">{escape(heading)}</h2>
+  <div class="related-list">{items}</div>
+</aside>"""
+
+
+def render_related_mobile(articles: list[dict[str, Any]], depth: int = 0) -> str:
+    if not articles:
+        return ""
+    items = "".join(render_related_item(a, depth) for a in articles)
+    return f"""
+<section class="article-related-mobile" aria-label="Related stories">
+  <h2 class="related-heading">Related stories</h2>
+  <div class="related-list related-list-mobile">{items}</div>
+</section>"""
+
+
 def generate_index(articles: list[dict[str, Any]]) -> str:
-    secondary = articles[4:8]
+    featured = pick_homepage_featured(articles)
+    featured_slugs = {a["slug"] for a in featured}
+    secondary = [a for a in articles if a["slug"] not in featured_slugs][:4]
     section_blocks = []
     for section in SECTIONS:
         sec_articles = [a for a in articles if a["section"] == section][:5]
@@ -818,10 +969,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
     <div class="home-main">
       {header_ad_markup()}
       {house_ad_markup(0, home_page_key(), "page-top")}
-      <section class="fold-random" aria-label="Top stories">
-        <div id="fold-hero" class="fold-hero shell"></div>
-        <div id="fold-grid" class="fold-grid shell"></div>
-      </section>
+      {render_featured_section(articles)}
       <section class="secondary-grid">
         <h2 class="visually-hidden">More headlines</h2>
         <div class="card-grid four-up">
@@ -879,33 +1027,44 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
     )
 
 
-def generate_article_page(article: dict[str, Any]) -> str:
+def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, Any]]) -> str:
     depth = 2
-    slug = article["slug"]
     in_content_ad = "" if is_small_article(article) else ad_slot_markup("inContent", "ad-slot-in-content")
+    left_related, right_related = pick_related_articles(article, all_articles)
+    mobile_related = left_related + [
+        a for a in right_related if a["slug"] not in {x["slug"] for x in left_related}
+    ]
+    section_label = article.get("section") or "News"
     return (
         chrome_head(article["title"], depth, body_class="page-article")
         + chrome_header(article["section"], depth, on_homepage=False)
         + f"""
 <main class="page-article">
-  {header_ad_markup()}
-  {article_house_ad_top(article)}
-  <article class="full-article">
-    <p class="story-kicker">{escape(article['section'].upper())}</p>
-    <h1 class="article-title">{escape(article['title'])}</h1>
-    <p class="article-dek">{escape(article['dek'])}</p>
-    <p class="article-meta">By {escape(article['byline'])} · {escape(article['display_date_long'])} · {article['read_minutes']} min read</p>
-    <figure class="article-hero">
-      <img src="{escape(article['hero_image'])}" alt="" />
-    </figure>
-    {in_content_ad}
-    <div class="article-body">
-      {article['body_html']}
-      {promo_footer(article)}
+  <div class="article-layout">
+    {render_related_rail(left_related, depth, f"More in {section_label}", "article-rail-left")}
+    <div class="article-main">
+      {header_ad_markup()}
+      {article_house_ad_top(article)}
+      <article class="full-article">
+        <p class="story-kicker">{escape(article['section'].upper())}</p>
+        <h1 class="article-title">{escape(article['title'])}</h1>
+        <p class="article-dek">{escape(article['dek'])}</p>
+        <p class="article-meta">By {escape(article['byline'])} · {escape(article['display_date_long'])} · {article['read_minutes']} min read</p>
+        <figure class="article-hero">
+          <img src="{escape(article['hero_image'])}" alt="" />
+        </figure>
+        {in_content_ad}
+        <div class="article-body">
+          {article['body_html']}
+          {promo_footer(article)}
+        </div>
+        <p class="back-link"><a href="{site_href("index.html", depth)}">← Back to front page</a></p>
+      </article>
+      {article_house_ad_bottom(article)}
+      {render_related_mobile(mobile_related, depth)}
     </div>
-    <p class="back-link"><a href="{site_href("index.html", depth)}">← Back to front page</a></p>
-  </article>
-  {article_house_ad_bottom(article)}
+    {render_related_rail(right_related, depth, "Latest headlines", "article-rail-right")}
+  </div>
 </main>
 """
         + chrome_footer(depth, on_homepage=False)
@@ -1090,7 +1249,7 @@ def build_site(archive: bool = False, publish_one: bool = False) -> dict[str, An
     for article in ingested:
         adir = SITE / "article" / article["slug"]
         adir.mkdir(parents=True, exist_ok=True)
-        (adir / "index.html").write_text(generate_article_page(article), encoding="utf-8")
+        (adir / "index.html").write_text(generate_article_page(article, ingested), encoding="utf-8")
 
     write_article_redirects()
     active_slugs = {a["slug"] for a in ingested}
