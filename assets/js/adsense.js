@@ -5,7 +5,21 @@
     return window.SITE_CONFIG?.adsense || {};
   }
 
-  function renderAdSlot(key, className) {
+  function slotFormat(el) {
+    if (el.classList.contains("ad-slot-header") || el.classList.contains("ad-slot-footer")) {
+      return "horizontal";
+    }
+    return "auto";
+  }
+
+  function unitClass(el) {
+    if (el.classList.contains("ad-slot-header")) return "ad-unit-header";
+    if (el.classList.contains("ad-slot-footer")) return "ad-unit-footer";
+    if (el.classList.contains("ad-slot-in-content")) return "ad-unit-in-content";
+    return "ad-unit";
+  }
+
+  function renderAdSlot(key, el) {
     const settings = cfg();
     const slotId = settings.slots?.[key];
     if (!settings.publisherId || !slotId) {
@@ -13,12 +27,14 @@
     }
     return (
       '<ins class="adsbygoogle ' +
-      (className || "ad-unit") +
+      unitClass(el) +
       '" style="display:block" data-ad-client="' +
       settings.publisherId +
       '" data-ad-slot="' +
       slotId +
-      '" data-ad-format="auto" data-full-width-responsive="true"></ins>'
+      '" data-ad-format="' +
+      slotFormat(el) +
+      '" data-full-width-responsive="true"></ins>'
     );
   }
 
@@ -41,7 +57,7 @@
       if (!key) {
         return;
       }
-      const html = renderAdSlot(key, el.classList.contains("ad-slot-sidebar") ? "ad-unit-sidebar" : "ad-unit");
+      const html = renderAdSlot(key, el);
       if (!html) {
         el.remove();
         return;
