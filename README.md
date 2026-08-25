@@ -31,4 +31,4 @@ Open http://localhost:8081/
 
 - Top 4 above-the-fold stories randomize on each homepage load (`assets/js/paper.js`).
 - Subscribe CTAs are hidden via CSS until paid subscription launches (`.subscribe-cta`).
-- Display dates in `data/articles.json` are synthetic (Jan–Aug 2026) for an established-paper look.
+- Display dates in `data/articles.json` are synthetic (Jan-Aug 2026) for an established-paper look.

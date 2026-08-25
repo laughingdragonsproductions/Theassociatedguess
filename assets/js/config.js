@@ -1,4 +1,4 @@
-/** The Associated Guess — site config */
+/** The Associated Guess - site config */
 window.SITE_CONFIG = {
   name: "The Associated Guess",
   legalName: "Laughing Dragons Productions",
