@@ -49,9 +49,22 @@ VERIFIED_PHOTO_IDS: frozenset[str] = frozenset(
         "1504384308090-c894fdcc538d",
         "1560472354-b33ff0c44a43",
         "1582719478250-c89cae4dc85b",
-        "1618005182384-a83a8bd57fbe",
         "1621905252507-b35492cc74b4",
         "1571019613454-1cb2f99b2d8b",
+        # Added for richer, non-abstract hero variety (GET-tested)
+        "1593508512255-86ab42a8e620",
+        "1485827404703-89b55fcc595e",
+        "1511578314322-379afb476865",
+        "1454165804606-c3d57bc86b40",
+        "1526374965328-7f61d4dc18c5",
+        "1531297484001-80022131f5a1",
+        "1498050108023-c5249f4df085",
+        "1555949963-aa79dcee981c",
+        "1550751827-4bd374c3f58b",
+        "1560518883-ce09059eeffa",
+        "1554224155-6726b3ff858f",
+        "1573865526739-10659fec78a5",
+        "1556911220-bff31c812dba",
     }
 )
 
@@ -61,7 +74,7 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "cat",
         "keywords": ["cat", "cats", "feline", "tabby", "kitten", "meow", "pancake"],
-        "photos": ["1514888286974-6c03e2ca1dba"],
+        "photos": ["1514888286974-6c03e2ca1dba", "1573865526739-10659fec78a5"],
     },
     {
         "id": "dog",
@@ -101,17 +114,27 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "ghost",
         "keywords": ["ghost", "ghosts", "haunt", "spooky", "sheet", "specter", "paranormal"],
-        "photos": ["1507003211169-0a1dd7228f2d", "1618005182384-a83a8bd57fbe"],
+        "photos": ["1507003211169-0a1dd7228f2d", "1560472354-b33ff0c44a43"],
     },
     {
         "id": "ufo",
         "keywords": ["ufo", "alien", "aliens", "nebraska", "object", "invasion", "extraterrestrial"],
-        "photos": ["1618005182384-a83a8bd57fbe", "1635070041078-e363dbe005cb"],
+        "photos": ["1635070041078-e363dbe005cb", "1485827404703-89b55fcc595e"],
     },
     {
         "id": "space",
         "keywords": ["space", "moon", "galactic", "planet", "orbit", "astronaut", "cosmos", "solar"],
-        "photos": ["1618005182384-a83a8bd57fbe", "1635070041078-e363dbe005cb", "1506905925346-21bda4d32df4"],
+        "photos": ["1635070041078-e363dbe005cb", "1506905925346-21bda4d32df4", "1555949963-aa79dcee981c"],
+    },
+    {
+        "id": "vr",
+        "keywords": ["virtual reality", "vr headset", "metaverse", "immersive", "vr conference"],
+        "photos": ["1593508512255-86ab42a8e620", "1511578314322-379afb476865"],
+    },
+    {
+        "id": "election",
+        "keywords": ["vote", "voting", "election", "ballot", "citizens to vote", "mandatory vote"],
+        "photos": ["1554224155-6726b3ff858f", "1560518883-ce09059eeffa"],
     },
     {
         "id": "gym",
@@ -136,7 +159,7 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "smart_home",
         "keywords": ["alexa", "speaker", "smart speaker", "fridge", "refrigerator", "leftover", "leftovers", "kitchen counter"],
-        "photos": ["1556909114-f6e7ad7d3136", "1504384308090-c894fdcc538d"],
+        "photos": ["1556909114-f6e7ad7d3136", "1556911220-bff31c812dba", "1504384308090-c894fdcc538d"],
     },
     {
         "id": "school",
@@ -161,7 +184,15 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "tech",
         "keywords": ["tech", "ceo", "ai", "spreadsheet", "software", "digital", "virtual", "crypto", "currency", "furniture", "pumpkin carving"],
-        "photos": ["1518770660439-4636190af475", "1551288049-bebda4e38f71", "1618005182384-a83a8bd57fbe"],
+        "photos": [
+            "1518770660439-4636190af475",
+            "1551288049-bebda4e38f71",
+            "1485827404703-89b55fcc595e",
+            "1526374965328-7f61d4dc18c5",
+            "1531297484001-80022131f5a1",
+            "1498050108023-c5249f4df085",
+            "1454165804606-c3d57bc86b40",
+        ],
     },
     {
         "id": "grocery",
@@ -171,7 +202,12 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "government",
         "keywords": ["council", "mayor", "congress", "hearing", "election", "vote", "law", "ordinance", "city hall", "pentagon", "government"],
-        "photos": ["1449824913935-59a10b8d2000", "1522071820081-009f0129c71c"],
+        "photos": [
+            "1560518883-ce09059eeffa",
+            "1556761175-b413da4baf72",
+            "1449824913935-59a10b8d2000",
+            "1522071820081-009f0129c71c",
+        ],
     },
     {
         "id": "economy",
@@ -261,7 +297,7 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "science",
         "keywords": ["scientist", "research", "gravity", "physics", "time travel", "warming", "study", "peer-reviewed", "telescope"],
-        "photos": ["1635070041078-e363dbe005cb", "1618005182384-a83a8bd57fbe"],
+        "photos": ["1635070041078-e363dbe005cb", "1555949963-aa79dcee981c", "1550751827-4bd374c3f58b"],
     },
     {
         "id": "eco",
@@ -274,6 +310,16 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
         "photos": ["1500530855697-b586d89ba3ee", "1621905252507-b35492cc74b4"],
     },
 ]
+
+# Pin distinct, topic-accurate heroes for high-traffic / homepage cards.
+SLUG_PHOTO_OVERRIDES: dict[str, str] = {
+    "virtual-reality-conference": "1593508512255-86ab42a8e620",
+    "tech-ceo-apologizes-for-calling-everything-ai-when-its-just-math": "1454165804606-c3d57bc86b40",
+    "new-law-requires-all-citizens-to-vote-in-the-next-election": "1554224155-6726b3ff858f",
+    "congress-discovers-future-already-happened-schedules-hearing": "1560518883-ce09059eeffa",
+    "nations-smart-fridges-hold-emergency-meeting-about-leftovers": "1556911220-bff31c812dba",
+    "fda-approves-new-drug-that-only-treats-symptoms-of-reading-the-news": "1571019613454-1cb2f99b2d8b",
+}
 
 SLUG_OVERRIDES: dict[str, str] = {
     "ghost-parking": "ghost",
@@ -304,7 +350,12 @@ SLUG_OVERRIDES: dict[str, str] = {
     "digital-pumpkin": "grocery",
     "digital-furniture": "tech",
     "digital-currency-trend": "tech",
-    "virtual-reality-conference": "tech",
+    "virtual-reality-conference": "vr",
+    "tech-ceo-apologizes-for-calling-everything-ai-when-its-just-math": "tech",
+    "new-law-requires-all-citizens-to-vote-in-the-next-election": "election",
+    "congress-discovers-future-already-happened-schedules-hearing": "government",
+    "nations-smart-fridges-hold-emergency-meeting-about-leftovers": "smart_home",
+    "fda-approves-new-drug-that-only-treats-symptoms-of-reading-the-news": "health",
     "viral-video-contest": "video",
 }
 
@@ -404,11 +455,16 @@ def pick_article_images(
     if image_prompt.startswith("http://") or image_prompt.startswith("https://"):
         return image_prompt, image_prompt
 
+    pinned_photo = SLUG_PHOTO_OVERRIDES.get(slug)
+    if pinned_photo and pinned_photo in VERIFIED_PHOTO_IDS:
+        return _unsplash(pinned_photo, 800, 500), _unsplash(pinned_photo, 400, 300)
+
+    seed = f"{article_id}:{slug}"
     override_id = SLUG_OVERRIDES.get(slug)
     if override_id:
         topic = _topic_by_id(override_id)
         if topic:
-            photo = _pick_photo(topic, article_id or slug)
+            photo = _pick_photo(topic, seed)
             return _unsplash(photo, 800, 500), _unsplash(photo, 400, 300)
 
     search_blob = " ".join(
@@ -432,5 +488,5 @@ def pick_article_images(
         fallback_id = SECTION_DEFAULTS.get(section, "newsroom")
         best_topic = _topic_by_id(fallback_id) or IMAGE_TOPICS[0]
 
-    photo = _pick_photo(best_topic, article_id or slug)
+    photo = _pick_photo(best_topic, seed)
     return _unsplash(photo, 800, 500), _unsplash(photo, 400, 300)

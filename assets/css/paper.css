@@ -729,6 +729,40 @@ img {
   background: var(--paper-warm, #faf9f6);
 }
 
+/* In-flow promos share the same column width as adjacent editorial content */
+.home-main .ad-slot-header,
+.home-main .house-ad-block,
+.page-article .ad-slot-header,
+.page-article .house-ad-block,
+.page-static .ad-slot-header,
+.page-static .house-ad-block {
+  max-width: none;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.home-main .ad-slot-header {
+  margin-bottom: 0.75rem;
+  padding-left: 0;
+  padding-right: 0;
+  border-bottom: none;
+  background: transparent;
+}
+
+.page-article .ad-slot-header,
+.page-static .ad-slot-header {
+  margin-bottom: 1rem;
+  padding-left: 0;
+  padding-right: 0;
+  border-bottom: none;
+  background: transparent;
+}
+
+.page-static .house-ad-page-bottom {
+  margin-top: 2rem;
+}
+
 .ad-slot-in-content {
   max-width: 728px;
   margin: 1.25rem auto;
@@ -766,6 +800,13 @@ img {
   background: #fafafa;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   font-family: var(--sans, "Source Sans 3", sans-serif);
+}
+
+.home-sidebar .house-ad-block {
+  max-width: none;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .house-ad-article-top {

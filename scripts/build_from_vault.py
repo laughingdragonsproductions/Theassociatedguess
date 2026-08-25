@@ -435,9 +435,9 @@ HOUSE_ADS: list[dict[str, str]] = [
     {
         "id": "hub",
         "title": "Laughing Dragons Productions",
-        "line": "Games, tools, podcasts, and the studio behind this paper.",
+        "line": "Indie games, creative tools, and podcasts — new releases from the studio.",
         "url": "https://laughing-dragons.com",
-        "cta": "Visit hub",
+        "cta": "Explore now",
         "image": "https://laughing-dragons.com/assets/brand/ldp-workroom-banner.png",
         "image_alt": "Laughing Dragons Productions workroom",
     },
@@ -622,7 +622,17 @@ def ad_slot_markup(key: str, extra_class: str = "") -> str:
     return f'<div class="{cls}" data-ad-slot="{escape(key)}"></div>'
 
 
-def chrome_head(page_title: str, depth: int = 0, description: str = "", canonical_path: str = "") -> str:
+def header_ad_markup(show_ads: bool = True) -> str:
+    return ad_slot_markup("header", "ad-slot-header") if show_ads else ""
+
+
+def chrome_head(
+    page_title: str,
+    depth: int = 0,
+    description: str = "",
+    canonical_path: str = "",
+    body_class: str = "",
+) -> str:
     title = escape(page_title)
     meta_desc = escape(description or TAGLINE)
     root_attr = site_href("", depth).rstrip("/") or "."
@@ -630,6 +640,7 @@ def chrome_head(page_title: str, depth: int = 0, description: str = "", canonica
     canonical = ""
     if canonical_path:
         canonical = f'  <link rel="canonical" href="https://{DOMAIN}/{canonical_path.lstrip("/")}" />\n'
+    body_attrs = f' class="{escape(body_class)}"' if body_class else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -643,7 +654,7 @@ def chrome_head(page_title: str, depth: int = 0, description: str = "", canonica
   <link rel="stylesheet" href="{css}" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_PUBLISHER}" crossorigin="anonymous"></script>
 </head>
-<body data-site-root="{root_attr}">"""
+<body{body_attrs} data-site-root="{root_attr}">"""
 
 
 def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = False, show_ads: bool = True) -> str:
@@ -653,7 +664,6 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
         f'<a href="{home_anchor(s.lower().replace(" ", "-"), depth, on_homepage)}" class="nav-link{" active" if s == active_section else ""}">{escape(s)}</a>'
         for s in SECTIONS
     )
-    header_ad = ad_slot_markup("header", "ad-slot-header") if show_ads else ""
     return f"""
 <header class="site-header">
   <div class="utility-bar">
@@ -680,8 +690,7 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
     {nav_items}
     <button type="button" class="nav-toggle" aria-label="Menu">☰</button>
   </nav>
-</header>
-{header_ad}"""
+</header>"""
 
 
 def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = True) -> str:
@@ -800,13 +809,15 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
             "Home",
             description=f"Satirical news from {BRAND}  -  published by {LEGAL_NAME}. {TAGLINE}",
             canonical_path="",
+            body_class="page-home",
         )
         + chrome_header(on_homepage=True)
-        + house_ad_markup(0, home_page_key(), "page-top")
         + f"""
 <main class="page-home">
   <div class="home-top">
     <div class="home-main">
+      {header_ad_markup()}
+      {house_ad_markup(0, home_page_key(), "page-top")}
       <section class="fold-random" aria-label="Top stories">
         <div id="fold-hero" class="fold-hero shell"></div>
         <div id="fold-grid" class="fold-grid shell"></div>
@@ -873,11 +884,12 @@ def generate_article_page(article: dict[str, Any]) -> str:
     slug = article["slug"]
     in_content_ad = "" if is_small_article(article) else ad_slot_markup("inContent", "ad-slot-in-content")
     return (
-        chrome_head(article["title"], depth)
+        chrome_head(article["title"], depth, body_class="page-article")
         + chrome_header(article["section"], depth, on_homepage=False)
-        + article_house_ad_top(article)
         + f"""
 <main class="page-article">
+  {header_ad_markup()}
+  {article_house_ad_top(article)}
   <article class="full-article">
     <p class="story-kicker">{escape(article['section'].upper())}</p>
     <h1 class="article-title">{escape(article['title'])}</h1>
@@ -893,9 +905,9 @@ def generate_article_page(article: dict[str, Any]) -> str:
     </div>
     <p class="back-link"><a href="{site_href("index.html", depth)}">← Back to front page</a></p>
   </article>
+  {article_house_ad_bottom(article)}
 </main>
 """
-        + article_house_ad_bottom(article)
         + chrome_footer(depth, on_homepage=False)
     )
 
@@ -955,10 +967,14 @@ def write_static_pages() -> None:
             house_ad_markup(0, page_slug, "page-bottom") if show_ads else ""
         )
         path.write_text(
-            chrome_head(title, description=description, canonical_path=canonical)
+            chrome_head(
+                title,
+                description=description,
+                canonical_path=canonical,
+                body_class="page-static",
+            )
             + chrome_header(on_homepage=False, show_ads=show_ads)
-            + f"<main class='page-static'><h1>{escape(title)}</h1>{body}</main>"
-            + footer_promo
+            + f"<main class='page-static'>{header_ad_markup(show_ads)}<h1>{escape(title)}</h1>{body}{footer_promo}</main>"
             + chrome_footer(on_homepage=False, show_ads=show_ads),
             encoding="utf-8",
         )
