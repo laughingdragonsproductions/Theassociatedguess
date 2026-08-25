@@ -10,7 +10,6 @@ window.SITE_CONFIG = {
   links: {
     parent: "https://laughing-dragons.com",
     parentContact: "https://laughing-dragons.com/contact/",
-    chittin: "https://chittinandchattin.com",
     them1947: "https://them1947.com",
     litprintz: "https://litprintz.com",
   },
@@ -22,19 +21,13 @@ window.SITE_CONFIG = {
       inContent: "",
     },
   },
-  /** Portfolio promos injected in article bodies at build time (see build_from_vault.py). */
+  /** One header + one footer promo per article (build_from_vault.py). */
   houseAds: [
     {
       id: "hub",
       title: "Laughing Dragons Productions",
       url: "https://laughing-dragons.com",
       image: "https://laughing-dragons.com/assets/brand/ldp-workroom-banner.png",
-    },
-    {
-      id: "chittin",
-      title: "Chittin and Chattin",
-      url: "https://chittinandchattin.com",
-      image: "https://chittinandchattin.com/assets/brand/hero.png",
     },
     {
       id: "them1947",
