@@ -754,3 +754,65 @@ img {
   max-height: 120px;
   overflow: hidden;
 }
+
+/* House promos — display-ad shape, clearly labeled (not Google AdSense) */
+.house-ad-block {
+  display: block;
+  max-width: 728px;
+  margin: 1.5rem auto;
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid #e8e8e8;
+  border-radius: 2px;
+  background: #fafafa;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  font-family: var(--sans, "Source Sans 3", sans-serif);
+}
+
+.house-ad-label {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5f6368;
+  border: 1px solid #dadce0;
+  border-radius: 2px;
+  padding: 0.1rem 0.35rem;
+  margin-bottom: 0.5rem;
+  background: #fff;
+}
+
+.house-ad-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.house-ad-link:hover .house-ad-title {
+  text-decoration: underline;
+}
+
+.house-ad-title {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1a0dab;
+  line-height: 1.3;
+  margin-bottom: 0.35rem;
+}
+
+.house-ad-line {
+  display: block;
+  font-size: 0.875rem;
+  color: #3c4043;
+  line-height: 1.45;
+  margin-bottom: 0.5rem;
+}
+
+.house-ad-cta {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #188038;
+}
