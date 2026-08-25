@@ -773,9 +773,19 @@ img {
   margin-bottom: 1rem;
 }
 
-.house-ad-article-bottom {
+.house-ad-article-bottom,
+.house-ad-page-bottom {
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
+}
+
+.house-ad-page-top {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.house-ad-page-mid {
+  margin-top: 1.25rem;
 }
 
 .house-ad-label {

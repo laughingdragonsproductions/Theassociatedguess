@@ -462,6 +462,27 @@ HOUSE_ADS: list[dict[str, str]] = [
 ]
 
 
+SMALL_ARTICLE_MAX_MINUTES = 2
+
+
+def home_page_key() -> str:
+    return f"home-{datetime.now().strftime('%Y-%m-%d')}"
+
+
+def is_small_article(article: dict[str, Any]) -> bool:
+    return int(article.get("read_minutes") or 99) <= SMALL_ARTICLE_MAX_MINUTES
+
+
+def article_house_ad_top(article: dict[str, Any]) -> str:
+    if is_small_article(article):
+        return ""
+    return house_ad_markup(0, article["slug"], "article-top")
+
+
+def article_house_ad_bottom(article: dict[str, Any]) -> str:
+    return house_ad_markup(1, article["slug"], "article-bottom")
+
+
 def pick_house_ad(slot: int, slug: str) -> dict[str, str]:
     seed = sum(ord(c) for c in (slug or "story")) + slot * 31
     return HOUSE_ADS[seed % len(HOUSE_ADS)]
@@ -759,6 +780,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
             canonical_path="",
         )
         + chrome_header(on_homepage=True)
+        + house_ad_markup(0, home_page_key(), "page-top")
         + f"""
 <main class="page-home">
   <div class="home-top">
@@ -814,6 +836,7 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
         </form>
         <p class="subscribe-cta newsletter-subscribe-note" data-feature="subscription" aria-hidden="true">Paid subscription coming soon.</p>
       </section>
+      {house_ad_markup(2, home_page_key(), "page-mid")}
     </aside>
   </div>
 </main>
@@ -826,10 +849,11 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
 def generate_article_page(article: dict[str, Any]) -> str:
     depth = 2
     slug = article["slug"]
+    in_content_ad = "" if is_small_article(article) else ad_slot_markup("inContent", "ad-slot-in-content")
     return (
         chrome_head(article["title"], depth)
         + chrome_header(article["section"], depth, on_homepage=False)
-        + house_ad_markup(0, slug, "article-top")
+        + article_house_ad_top(article)
         + f"""
 <main class="page-article">
   <article class="full-article">
@@ -840,7 +864,7 @@ def generate_article_page(article: dict[str, Any]) -> str:
     <figure class="article-hero">
       <img src="{escape(article['hero_image'])}" alt="" />
     </figure>
-    {ad_slot_markup("inContent", "ad-slot-in-content")}
+    {in_content_ad}
     <div class="article-body">
       {article['body_html']}
       {promo_footer(article)}
@@ -849,7 +873,7 @@ def generate_article_page(article: dict[str, Any]) -> str:
   </article>
 </main>
 """
-        + house_ad_markup(1, slug, "article-bottom")
+        + article_house_ad_bottom(article)
         + chrome_footer(depth, on_homepage=False)
     )
 
@@ -904,10 +928,15 @@ def write_static_pages() -> None:
     for name, title, body, description, canonical in pages:
         path = SITE / name
         show_ads = name not in {"privacy.html", "terms.html"}
+        page_slug = name.replace(".html", "")
+        footer_promo = (
+            house_ad_markup(0, page_slug, "page-bottom") if show_ads else ""
+        )
         path.write_text(
             chrome_head(title, description=description, canonical_path=canonical)
             + chrome_header(on_homepage=False, show_ads=show_ads)
             + f"<main class='page-static'><h1>{escape(title)}</h1>{body}</main>"
+            + footer_promo
             + chrome_footer(on_homepage=False, show_ads=show_ads),
             encoding="utf-8",
         )
