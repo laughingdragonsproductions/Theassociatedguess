@@ -755,17 +755,16 @@ img {
   overflow: hidden;
 }
 
-/* House promos — display-ad shape, clearly labeled (not Google AdSense) */
+/* House promos — display-ad shape with site artwork, clearly labeled */
 .house-ad-block {
   display: block;
   max-width: 728px;
   margin: 1.5rem auto;
-  padding: 0.75rem 1rem 1rem;
+  padding: 0.65rem 0.85rem 0.85rem;
   border: 1px solid #e8e8e8;
   border-radius: 2px;
   background: #fafafa;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  text-align: center;
   font-family: var(--sans, "Source Sans 3", sans-serif);
 }
 
@@ -784,35 +783,76 @@ img {
 }
 
 .house-ad-link {
-  display: block;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.85rem;
   color: inherit;
   text-decoration: none;
+  text-align: left;
 }
 
 .house-ad-link:hover .house-ad-title {
   text-decoration: underline;
 }
 
+.house-ad-media {
+  flex: 0 0 120px;
+  width: 120px;
+  max-height: 72px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #eee;
+  border: 1px solid #e0e0e0;
+}
+
+.house-ad-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.house-ad-copy {
+  flex: 1;
+  min-width: 0;
+}
+
 .house-ad-title {
   display: block;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #1a0dab;
   line-height: 1.3;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem;
 }
 
 .house-ad-line {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: #3c4043;
-  line-height: 1.45;
-  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  margin-bottom: 0.35rem;
 }
 
 .house-ad-cta {
   display: inline-block;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #188038;
+}
+
+@media (max-width: 520px) {
+  .house-ad-link {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .house-ad-media {
+    width: 100%;
+    max-width: 100%;
+    flex: none;
+    max-height: 100px;
+  }
 }
