@@ -438,6 +438,8 @@ HOUSE_ADS: list[dict[str, str]] = [
         "line": "Games, tools, podcasts, and the studio behind this paper.",
         "url": "https://laughing-dragons.com",
         "cta": "Visit hub",
+        "image": "https://laughing-dragons.com/assets/brand/ldp-workroom-banner.png",
+        "image_alt": "Laughing Dragons Productions workroom",
     },
     {
         "id": "chittin",
@@ -445,6 +447,8 @@ HOUSE_ADS: list[dict[str, str]] = [
         "line": "A podcast about nothing in particular and everything at once.",
         "url": "https://chittinandchattin.com",
         "cta": "Listen now",
+        "image": "https://chittinandchattin.com/assets/brand/hero.png",
+        "image_alt": "Chittin and Chattin podcast art",
     },
     {
         "id": "them1947",
@@ -452,6 +456,8 @@ HOUSE_ADS: list[dict[str, str]] = [
         "line": "Display-grade alien Grey prints and classified-adjacent files.",
         "url": "https://them1947.com",
         "cta": "Browse archive",
+        "image": "https://them1947.com/assets/video/landing-poster.jpg",
+        "image_alt": "THEM 1947 classified landing art",
     },
     {
         "id": "litprintz",
@@ -459,6 +465,8 @@ HOUSE_ADS: list[dict[str, str]] = [
         "line": "Drinkware, wellness theater, and things printed different.",
         "url": "https://litprintz.com",
         "cta": "Shop prints",
+        "image": "https://litprintz.com/cdn/shop/files/ChatGPT_Image_Jul_2_2026_11_32_32_PM.png?v=1783049617",
+        "image_alt": "Lit Printz drinkware and print designs",
     },
 ]
 
@@ -473,14 +481,25 @@ def pick_house_ad(slot: int, slug: str) -> dict[str, str]:
 
 def house_ad_markup(slot: int, slug: str) -> str:
     ad = pick_house_ad(slot, slug)
+    img = ad.get("image") or ""
+    img_alt = escape(ad.get("image_alt") or ad["title"])
+    media = ""
+    if img:
+        media = (
+            f'<div class="house-ad-media">'
+            f'<img src="{html.escape(img, quote=True)}" alt="{img_alt}" loading="lazy" width="140" height="90" />'
+            f"</div>"
+        )
     return (
         f'<aside class="house-ad-block" aria-label="Promoted: {escape(ad["title"])}">'
         f'<span class="house-ad-label">Promoted</span>'
         f'<a class="house-ad-link" href="{html.escape(ad["url"], quote=True)}" rel="noopener sponsored">'
+        f"{media}"
+        f'<div class="house-ad-copy">'
         f'<span class="house-ad-title">{escape(ad["title"])}</span>'
         f'<span class="house-ad-line">{escape(ad["line"])}</span>'
         f'<span class="house-ad-cta">{escape(ad["cta"])} ›</span>'
-        f"</a></aside>"
+        f"</div></a></aside>"
     )
 
 
