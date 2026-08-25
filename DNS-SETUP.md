@@ -2,7 +2,7 @@
 
 GitHub shows **NotServedByPagesError** because the domain is registered on Cloudflare but has **no records pointing at GitHub**.
 
-## Cloudflare — add these records
+## Cloudflare - add these records
 
 Open [Cloudflare DNS](https://dash.cloudflare.com) → **theassociatedguess.com** → **DNS** → **Records**.
 
@@ -10,13 +10,13 @@ Delete any old `@` or `www` records that point elsewhere (parking page, wrong ho
 
 ### Apex (`theassociatedguess.com`)
 
-**Option A — recommended on Cloudflare**
+**Option A - recommended on Cloudflare**
 
 | Type | Name | Content | Proxy |
 |------|------|---------|-------|
 | CNAME | `@` | `laughingdragonsproductions.github.io` | **DNS only** (grey cloud) |
 
-**Option B — A records (also valid)**
+**Option B - A records (also valid)**
 
 Add four **A** records, name `@`, proxy **DNS only**:
 
@@ -31,11 +31,11 @@ Add four **A** records, name `@`, proxy **DNS only**:
 |------|------|---------|-------|
 | CNAME | `www` | `laughingdragonsproductions.github.io` | **DNS only** (grey cloud) |
 
-**Important:** Target is `laughingdragonsproductions.github.io` — **not** `/Theassociatedguess`.
+**Important:** Target is `laughingdragonsproductions.github.io` - **not** `/Theassociatedguess`.
 
 ## After saving DNS
 
-1. Wait **5–30 minutes** (sometimes up to a few hours).
+1. Wait **5-30 minutes** (sometimes up to a few hours).
 2. GitHub → **Settings → Pages** → click **Check again** on the custom domain.
 3. When the DNS check passes, enable **Enforce HTTPS**.
 

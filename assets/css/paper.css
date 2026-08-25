@@ -1,4 +1,4 @@
-/* The Associated Guess — newspaper chrome */
+/* The Associated Guess - newspaper chrome */
 :root {
   --ink: #111;
   --muted: #555;
@@ -755,7 +755,7 @@ img {
   overflow: hidden;
 }
 
-/* House promos — display-ad shape with site artwork, clearly labeled */
+/* House promos - display-ad shape with site artwork, clearly labeled */
 .house-ad-block {
   display: block;
   max-width: 728px;

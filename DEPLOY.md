@@ -16,13 +16,13 @@ You must be **signed in** as `laughingdragonsproductions` (repo owner).
 2. Under **Build and deployment → Source**, choose **Deploy from a branch**.
 
 3. Set:
-   - **Branch:** `main` (simplest — site files are already here)  
+   - **Branch:** `main` (simplest - site files are already here)  
      *or* `gh-pages` (updated automatically on each push by the workflow)
    - **Folder:** `/ (root)`
 
 4. Click **Save**.
 
-5. Wait 1–3 minutes. GitHub will show a green box with your live URL:
+5. Wait 1-3 minutes. GitHub will show a green box with your live URL:
 
    **https://laughingdragonsproductions.github.io/Theassociatedguess/**
 
@@ -31,7 +31,7 @@ You must be **signed in** as `laughingdragonsproductions` (repo owner).
 ## Verify
 
 - Homepage loads with **The Associated Guess** masthead
-- CSS loads (grey background, red accent — not unstyled HTML)
+- CSS loads (grey background, red accent - not unstyled HTML)
 - Article links work, e.g. `/article/local-dog-elected-honorary-mayor-after-attending-every-council-meeting/`
 
 ## Custom domain (`theassociatedguess.com`)
@@ -47,7 +47,7 @@ In [Cloudflare DNS](https://dash.cloudflare.com) for `theassociatedguess.com`, a
 
 **Important:** Turn proxy **off** (grey cloud) until GitHub shows a valid certificate, then you can enable orange cloud if you want.
 
-After saving DNS, wait 5–30 minutes. Then:
+After saving DNS, wait 5-30 minutes. Then:
 
 - https://theassociatedguess.com/
 - https://laughingdragonsproductions.github.io/Theassociatedguess/ (redirects to custom domain once DNS works)
