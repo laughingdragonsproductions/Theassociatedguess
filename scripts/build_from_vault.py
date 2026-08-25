@@ -418,7 +418,7 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
         "promo": (meta.get("promo") or "none").strip(),
         "promo_url": (meta.get("promo_url") or "").strip(),
         "body": body,
-        "body_html": body_to_html(body),
+        "body_html": body_to_html(body, slug=slug),
         "read_minutes": read_minutes,
         "source_path": str(path),
         "hero_image": hero_image,
@@ -430,6 +430,58 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
 
 
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+
+HOUSE_ADS: list[dict[str, str]] = [
+    {
+        "id": "hub",
+        "title": "Laughing Dragons Productions",
+        "line": "Games, tools, podcasts, and the studio behind this paper.",
+        "url": "https://laughing-dragons.com",
+        "cta": "Visit hub",
+    },
+    {
+        "id": "chittin",
+        "title": "Chittin and Chattin",
+        "line": "A podcast about nothing in particular and everything at once.",
+        "url": "https://chittinandchattin.com",
+        "cta": "Listen now",
+    },
+    {
+        "id": "them1947",
+        "title": "THEM 1947",
+        "line": "Display-grade alien Grey prints and classified-adjacent files.",
+        "url": "https://them1947.com",
+        "cta": "Browse archive",
+    },
+    {
+        "id": "litprintz",
+        "title": "Lit Printz",
+        "line": "Drinkware, wellness theater, and things printed different.",
+        "url": "https://litprintz.com",
+        "cta": "Shop prints",
+    },
+]
+
+HOUSE_AD_EVERY = 3
+MAX_HOUSE_ADS = 4
+
+
+def pick_house_ad(slot: int, slug: str) -> dict[str, str]:
+    seed = sum(ord(c) for c in (slug or "story")) + slot * 31
+    return HOUSE_ADS[seed % len(HOUSE_ADS)]
+
+
+def house_ad_markup(slot: int, slug: str) -> str:
+    ad = pick_house_ad(slot, slug)
+    return (
+        f'<aside class="house-ad-block" aria-label="Promoted: {escape(ad["title"])}">'
+        f'<span class="house-ad-label">Promoted</span>'
+        f'<a class="house-ad-link" href="{html.escape(ad["url"], quote=True)}" rel="noopener sponsored">'
+        f'<span class="house-ad-title">{escape(ad["title"])}</span>'
+        f'<span class="house-ad-line">{escape(ad["line"])}</span>'
+        f'<span class="house-ad-cta">{escape(ad["cta"])} ›</span>'
+        f"</a></aside>"
+    )
 
 
 def inline_markdown(text: str) -> str:
@@ -448,9 +500,11 @@ def inline_markdown(text: str) -> str:
     return "".join(parts) if parts else escape(text)
 
 
-def body_to_html(body: str) -> str:
+def body_to_html(body: str, slug: str = "") -> str:
     blocks = [b.strip() for b in re.split(r"\n\s*\n", body) if b.strip()]
     parts: list[str] = []
+    para_count = 0
+    house_count = 0
     for block in blocks:
         if block.startswith("## "):
             parts.append(f'<h2 class="article-subhead">{escape(block[3:].strip())}</h2>')
@@ -463,6 +517,14 @@ def body_to_html(body: str) -> str:
         if block.startswith("#"):
             continue
         parts.append(f"<p>{inline_markdown(block)}</p>")
+        para_count += 1
+        if (
+            para_count >= 2
+            and para_count % HOUSE_AD_EVERY == 0
+            and house_count < MAX_HOUSE_ADS
+        ):
+            house_count += 1
+            parts.append(house_ad_markup(house_count, slug))
     return "\n".join(parts) if parts else f"<p>{escape(body[:500])}</p>"
 
 
