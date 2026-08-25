@@ -483,6 +483,28 @@ def article_house_ad_bottom(article: dict[str, Any]) -> str:
     return house_ad_markup(1, article["slug"], "article-bottom")
 
 
+ARTICLE_REDIRECTS: dict[str, str] = {
+    "dolly-lives-on-in-our-hearts": "dolly-dies-at-80",
+    "dolly-parton-dies-at-80-nation-briefly-forgets-she-was-already-immortal": "dolly-dies-at-80",
+    "internet-kills-dolly-parton-again-she-was-just-updating-avatar": "dolly-dies-at-80",
+}
+
+
+def write_article_redirects() -> None:
+    for old_slug, new_slug in ARTICLE_REDIRECTS.items():
+        dest = f"https://{DOMAIN}/article/{new_slug}/"
+        path = SITE / "article" / old_slug / "index.html"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\" />"
+            f"<meta http-equiv=\"refresh\" content=\"0;url={dest}\" />"
+            f"<link rel=\"canonical\" href=\"{dest}\" />"
+            f"<title>Redirect</title></head><body>"
+            f"<p>Moved: <a href=\"{dest}\">Continue</a></p></body></html>",
+            encoding="utf-8",
+        )
+
+
 def pick_house_ad(slot: int, slug: str) -> dict[str, str]:
     seed = sum(ord(c) for c in (slug or "story")) + slot * 31
     return HOUSE_ADS[seed % len(HOUSE_ADS)]
@@ -1054,11 +1076,13 @@ def build_site(archive: bool = False, publish_one: bool = False) -> dict[str, An
         adir.mkdir(parents=True, exist_ok=True)
         (adir / "index.html").write_text(generate_article_page(article), encoding="utf-8")
 
+    write_article_redirects()
     active_slugs = {a["slug"] for a in ingested}
+    preserve_slugs = active_slugs | set(ARTICLE_REDIRECTS.keys())
     article_root = SITE / "article"
     if article_root.is_dir():
         for child in article_root.iterdir():
-            if child.is_dir() and child.name not in active_slugs:
+            if child.is_dir() and child.name not in preserve_slugs:
                 shutil.rmtree(child)
 
     moved = 0
