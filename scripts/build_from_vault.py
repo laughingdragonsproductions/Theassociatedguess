@@ -1027,6 +1027,13 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
     )
 
 
+def article_hero_class(article: dict[str, Any]) -> str:
+    prompt = (article.get("image_prompt") or "").strip()
+    if prompt.startswith("http://") or prompt.startswith("https://"):
+        return "article-hero article-hero-fit-contain"
+    return "article-hero article-hero-fit-cover"
+
+
 def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, Any]]) -> str:
     depth = 2
     in_content_ad = "" if is_small_article(article) else ad_slot_markup("inContent", "ad-slot-in-content")
@@ -1050,7 +1057,7 @@ def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, 
         <h1 class="article-title">{escape(article['title'])}</h1>
         <p class="article-dek">{escape(article['dek'])}</p>
         <p class="article-meta">By {escape(article['byline'])} · {escape(article['display_date_long'])} · {article['read_minutes']} min read</p>
-        <figure class="article-hero">
+        <figure class="{article_hero_class(article)}">
           <img src="{escape(article['hero_image'])}" alt="" />
         </figure>
         {in_content_ad}
