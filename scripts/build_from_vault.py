@@ -677,60 +677,20 @@ def header_ad_markup(show_ads: bool = True) -> str:
     return ad_slot_markup("header", "ad-slot-header") if show_ads else ""
 
 
-def social_meta_tags(
-    *,
-    title: str,
-    description: str,
-    url: str,
-    image: str = "",
-    og_type: str = "website",
-) -> str:
-    meta_desc = description or TAGLINE
-    tags = [
-        f'  <meta property="og:type" content="{escape(og_type)}" />',
-        f'  <meta property="og:site_name" content="{escape(BRAND)}" />',
-        f'  <meta property="og:title" content="{escape(title)}" />',
-        f'  <meta property="og:description" content="{escape(meta_desc)}" />',
-        f'  <meta property="og:url" content="{escape(url)}" />',
-    ]
-    if image:
-        tags.extend(
-            [
-                f'  <meta property="og:image" content="{escape(image)}" />',
-                f'  <meta name="twitter:card" content="summary_large_image" />',
-                f'  <meta name="twitter:title" content="{escape(title)}" />',
-                f'  <meta name="twitter:description" content="{escape(meta_desc)}" />',
-                f'  <meta name="twitter:image" content="{escape(image)}" />',
-            ]
-        )
-    return "\n".join(tags) + "\n"
-
-
 def chrome_head(
     page_title: str,
     depth: int = 0,
     description: str = "",
     canonical_path: str = "",
     body_class: str = "",
-    og_image: str = "",
-    og_type: str = "website",
 ) -> str:
     title = escape(page_title)
     meta_desc = escape(description or TAGLINE)
     root_attr = site_href("", depth).rstrip("/") or "."
     css = site_href("assets/css/paper.css", depth)
     canonical = ""
-    social = ""
     if canonical_path:
-        canonical_url = f"https://{DOMAIN}/{canonical_path.lstrip('/')}"
-        canonical = f'  <link rel="canonical" href="{canonical_url}" />\n'
-        social = social_meta_tags(
-            title=page_title,
-            description=description,
-            url=canonical_url,
-            image=og_image,
-            og_type=og_type,
-        )
+        canonical = f'  <link rel="canonical" href="https://{DOMAIN}/{canonical_path.lstrip("/")}" />\n'
     body_attrs = f' class="{escape(body_class)}"' if body_class else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -739,7 +699,7 @@ def chrome_head(
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="{meta_desc}" />
   <title>{title}  -  {escape(BRAND)}</title>
-{canonical}{social}  <link rel="preconnect" href="https://fonts.googleapis.com" />
+{canonical}  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{css}" />
@@ -1125,15 +1085,7 @@ def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, 
     ]
     section_label = article.get("section") or "News"
     return (
-        chrome_head(
-            article["title"],
-            depth,
-            description=article["dek"],
-            canonical_path=f"article/{article['slug']}/",
-            body_class="page-article",
-            og_image=article["hero_image"],
-            og_type="article",
-        )
+        chrome_head(article["title"], depth, body_class="page-article")
         + chrome_header(article["section"], depth, on_homepage=False)
         + f"""
 <main class="page-article">
