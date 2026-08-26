@@ -6,6 +6,8 @@
   --accent: #8b0000;
   --bg: #e8e8e6;
   --surface: #f2f2f0;
+  --featured-bg: #f6f1e8;
+  --featured-border: #e5dcc8;
   --footer: #1a1a1a;
   --serif: "Libre Baskerville", Georgia, "Times New Roman", serif;
   --sans: "Source Sans 3", system-ui, sans-serif;
@@ -161,9 +163,17 @@ img {
   align-items: start;
 }
 
-.fold-random,
+.fold-random {
+  margin-bottom: 2rem;
+}
+
 .featured-section {
   margin-bottom: 2rem;
+  padding: 1.35rem 1.35rem 1.5rem;
+  background: var(--featured-bg);
+  border: 1px solid var(--featured-border);
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
 
 .featured-header {
@@ -174,7 +184,7 @@ img {
   gap: 0.35rem 1rem;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 2px solid #c9b896;
 }
 
 .featured-header .section-title {
@@ -535,9 +545,18 @@ img {
 .article-hero img {
   width: 100%;
   margin: 1rem 0;
+  background: #111;
+}
+
+.article-hero-fit-contain img {
+  height: auto;
+  max-height: min(92vh, 980px);
+  object-fit: contain;
+}
+
+.article-hero-fit-cover img {
   aspect-ratio: 16 / 9;
   object-fit: cover;
-  background: #111;
 }
 
 .article-body p {
