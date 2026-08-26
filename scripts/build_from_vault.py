@@ -294,12 +294,56 @@ def find_pending_date_folder_articles() -> list[Path]:
     return [path for _, _, path in pending]
 
 
-def find_pending_publish_articles() -> list[Path]:
-    """FIFO: Backlog first, then date-folder drafts (Carol's daily vault)."""
+def find_today_trending_publish_candidate(live_date: date | None = None) -> Path | None:
+    """Today's date folder: first .md with trending: true (alphabetical)."""
+    live = live_date or datetime.now(ET).date()
+    today_dir = ARTICLES_DIR / live.isoformat()
+    if not today_dir.is_dir():
+        return None
+    for path in sorted(today_dir.glob("*.md")):
+        if is_excluded_path(path):
+            continue
+        try:
+            meta = parse_frontmatter(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError):
+            continue
+        if parse_frontmatter_flag(meta.get("trending")):
+            return path
+    return None
+
+
+def pick_next_publish_source(live_date: date | None = None) -> tuple[Path | None, str]:
+    """Priority: today's trending, Backlog FIFO, then other date folders."""
+    trending = find_today_trending_publish_candidate(live_date)
+    if trending is not None:
+        return trending, "trending-today"
     backlog = find_pending_backlog_articles()
     if backlog:
-        return backlog
-    return find_pending_date_folder_articles()
+        return backlog[0], "Backlog"
+    daily = find_pending_date_folder_articles()
+    if daily:
+        return daily[0], daily[0].parent.name
+    return None, ""
+
+
+def find_pending_publish_articles() -> list[Path]:
+    """Legacy helper: flat list in publish priority order."""
+    src, _ = pick_next_publish_source()
+    if src is None:
+        return []
+    rest: list[Path] = []
+    trending = find_today_trending_publish_candidate()
+    if trending is not None:
+        rest.append(trending)
+    rest.extend(find_pending_backlog_articles())
+    rest.extend(find_pending_date_folder_articles())
+    seen: set[Path] = set()
+    ordered: list[Path] = []
+    for p in rest:
+        if p not in seen:
+            seen.add(p)
+            ordered.append(p)
+    return ordered
 
 
 def update_frontmatter_published(path: Path, pub_date: str) -> None:
@@ -321,11 +365,9 @@ def publish_one_pending(live_date: date | None = None) -> dict[str, Any]:
     """Move one vault draft to Stories-Used with today's live published date (ON004)."""
     live = live_date or datetime.now(ET).date()
     pub_str = live.isoformat()
-    pending = find_pending_publish_articles()
-    if not pending:
+    src, source_queue = pick_next_publish_source(live)
+    if src is None:
         return {"published": None, "live_date": pub_str, "reason": "no pending drafts in Backlog or date folders"}
-    src = pending[0]
-    source_queue = "Backlog" if BACKLOG in src.parents else src.parent.name
     update_frontmatter_published(src, pub_str)
     STORIES_USED.mkdir(parents=True, exist_ok=True)
     dest = STORIES_USED / src.name
