@@ -220,6 +220,11 @@ img {
 .fold-hero.shell {
   min-height: 280px;
   margin-bottom: 1rem;
+  transition: opacity 0.35s ease;
+}
+
+.fold-hero-fading {
+  opacity: 0.2;
 }
 
 .fold-grid.shell {

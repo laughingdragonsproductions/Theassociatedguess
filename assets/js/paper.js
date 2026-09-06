@@ -118,26 +118,6 @@
 
   function featuredPriority(article, todayIso) {
 
-    let score = 0;
-
-    if (isTruthyFlag(article.featured)) {
-
-      score += 1000;
-
-    }
-
-    if (article.display_date === todayIso) {
-
-      score += 500;
-
-    }
-
-    if (isTruthyFlag(article.trending)) {
-
-      score += 200;
-
-    }
-
     let dayOrd = 0;
 
     if (article.display_date) {
@@ -146,9 +126,29 @@
 
     }
 
+    let boost = 0;
+
+    if (article.display_date === todayIso) {
+
+      boost += 3;
+
+    }
+
+    if (isTruthyFlag(article.trending)) {
+
+      boost += 2;
+
+    }
+
+    if (isTruthyFlag(article.featured)) {
+
+      boost += 1;
+
+    }
+
     const numId = Number(article.id && article.id.replace(/\D/g, "")) || 0;
 
-    return [score, dayOrd, numId];
+    return [dayOrd, boost, numId];
 
   }
 
@@ -326,37 +326,41 @@
 
 
 
-  function renderFold(articles) {
-
-    const heroEl = document.getElementById("fold-hero");
-
-    const gridEl = document.getElementById("fold-grid");
-
-    if (!heroEl || !gridEl || !articles.length) return;
-
-    if (heroEl.innerHTML.trim()) {
-
-      return;
-
-    }
-
-
-
-    const pick = pickFeaturedArticles(articles, 4);
-
-    if (!pick.length) return;
-
-
-
-    const hero = pick[0];
-
-    const heroUrl = articleUrl(hero.slug);
+  function pickRecentFeatured(articles, limit) {
 
     const todayIso = todayIsoLocal();
 
-    const badge = featuredBadge(hero, todayIso);
+    return articles
 
-    heroEl.innerHTML =
+      .filter(function (a) {
+
+        return a.title && a.slug;
+
+      })
+
+      .slice()
+
+      .sort(function (a, b) {
+
+        return compareFeatured(a, b, todayIso);
+
+      })
+
+      .slice(0, limit || 8);
+
+  }
+
+
+
+  function renderHeroHtml(article) {
+
+    const heroUrl = articleUrl(article.slug);
+
+    const todayIso = todayIsoLocal();
+
+    const badge = featuredBadge(article, todayIso);
+
+    return (
 
       '<div class="hero-layout">' +
 
@@ -366,7 +370,7 @@
 
       '"><img src="' +
 
-      escapeHtml(hero.hero_image) +
+      escapeHtml(article.hero_image) +
 
       '" alt="" class="story-thumb" /></a>' +
 
@@ -376,7 +380,7 @@
 
       '<p class="story-kicker">' +
 
-      escapeHtml((hero.section || "News").toUpperCase()) +
+      escapeHtml((article.section || "News").toUpperCase()) +
 
       "</p>" +
 
@@ -386,45 +390,179 @@
 
       '">' +
 
-      escapeHtml(hero.title) +
+      escapeHtml(article.title) +
 
       "</a></h2>" +
 
       '<p class="story-dek">' +
 
-      escapeHtml(hero.dek || "") +
+      escapeHtml(article.dek || "") +
 
       "</p>" +
 
       '<p class="story-meta">By ' +
 
-      escapeHtml(hero.byline || "Staff") +
+      escapeHtml(article.byline || "Staff") +
 
       " · " +
 
-      escapeHtml(hero.display_date_long || "") +
+      escapeHtml(article.display_date_long || "") +
 
       " · " +
 
-      (hero.read_minutes || 3) +
+      (article.read_minutes || 3) +
 
       " min read</p>" +
 
-      "</div></div>";
+      "</div></div>"
+
+    );
+
+  }
 
 
 
-    gridEl.innerHTML = pick
+  function updateFeaturedLede(article) {
 
-      .slice(1, 4)
+    const ledeEl = document.getElementById("featured-lede");
 
-      .map(function (a) {
+    if (!ledeEl || !article) {
 
-        return cardHtml(a, "medium");
+      return;
 
-      })
+    }
 
-      .join("");
+    const todayIso = todayIsoLocal();
+
+    if (article.display_date === todayIso) {
+
+      ledeEl.textContent = "Lead story · posted today";
+
+    } else {
+
+      ledeEl.textContent = "Latest from the wire · rotates every 12s";
+
+    }
+
+  }
+
+
+
+  function renderFold(articles) {
+
+    const heroEl = document.getElementById("fold-hero");
+
+    const gridEl = document.getElementById("fold-grid");
+
+    if (!heroEl || !gridEl || !articles.length) return;
+
+
+
+    const pool = pickRecentFeatured(articles, 8);
+
+    if (!pool.length) return;
+
+
+
+    let heroIndex = 0;
+
+    let rotateTimer = null;
+
+
+
+    function paintHero() {
+
+      const hero = pool[heroIndex];
+
+      heroEl.innerHTML = renderHeroHtml(hero);
+
+      updateFeaturedLede(hero);
+
+    }
+
+
+
+    function paintGrid() {
+
+      const side = pool.filter(function (_, index) {
+
+        return index !== heroIndex;
+
+      }).slice(0, 3);
+
+      gridEl.innerHTML = side
+
+        .map(function (a) {
+
+          return cardHtml(a, "medium");
+
+        })
+
+        .join("");
+
+    }
+
+
+
+    function paintFeatured() {
+
+      paintHero();
+
+      paintGrid();
+
+    }
+
+
+
+    function advanceHero() {
+
+      if (pool.length < 2) {
+
+        return;
+
+      }
+
+      heroIndex = (heroIndex + 1) % pool.length;
+
+      heroEl.classList.add("fold-hero-fading");
+
+      window.setTimeout(function () {
+
+        paintFeatured();
+
+        heroEl.classList.remove("fold-hero-fading");
+
+      }, 220);
+
+    }
+
+
+
+    paintFeatured();
+
+
+
+    if (rotateTimer) {
+
+      window.clearInterval(rotateTimer);
+
+    }
+
+
+
+    if (
+
+      pool.length > 1 &&
+
+      heroEl.getAttribute("data-rotate") === "true" &&
+
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+    ) {
+
+      rotateTimer = window.setInterval(advanceHero, 12000);
+
+    }
 
   }
 
@@ -573,6 +711,124 @@
       });
 
     }
+
+  }
+
+
+
+  function renderHouseAdInner(ad) {
+
+    const img = ad.image || "";
+
+    const imgAlt = escapeHtml(ad.image_alt || ad.title || "");
+
+    const media = img
+
+      ? '<div class="house-ad-media"><img src="' +
+
+        escapeHtml(img) +
+
+        '" alt="' +
+
+        imgAlt +
+
+        '" loading="lazy" width="140" height="90" /></div>'
+
+      : "";
+
+    return (
+
+      '<span class="house-ad-label">Promoted</span>' +
+
+      '<a class="house-ad-link" href="' +
+
+      escapeHtml(ad.url || "#") +
+
+      '" rel="noopener sponsored">' +
+
+      media +
+
+      '<div class="house-ad-copy">' +
+
+      '<span class="house-ad-title">' +
+
+      escapeHtml(ad.title || "") +
+
+      "</span>" +
+
+      '<span class="house-ad-line">' +
+
+      escapeHtml(ad.line || "") +
+
+      "</span>" +
+
+      '<span class="house-ad-cta">' +
+
+      escapeHtml(ad.cta || "Visit") +
+
+      " ›</span>" +
+
+      "</div></a>"
+
+    );
+
+  }
+
+
+
+  function initHouseAds() {
+
+    const catalogEl = document.getElementById("house-ads-data");
+
+    if (!catalogEl) {
+
+      return;
+
+    }
+
+    let ads = [];
+
+    try {
+
+      ads = JSON.parse(catalogEl.textContent || "[]");
+
+    } catch (e) {
+
+      console.warn("house-ads-data parse failed", e);
+
+      return;
+
+    }
+
+    if (!Array.isArray(ads) || !ads.length) {
+
+      return;
+
+    }
+
+    const blocks = Array.prototype.slice.call(
+
+      document.querySelectorAll(".house-ad-rotate")
+
+    );
+
+    if (!blocks.length) {
+
+      return;
+
+    }
+
+    const pool = shuffle(ads.slice());
+
+    blocks.forEach(function (block, index) {
+
+      const ad = pool[index % pool.length];
+
+      block.innerHTML = renderHouseAdInner(ad);
+
+      block.setAttribute("aria-label", "Promoted: " + (ad.title || ""));
+
+    });
 
   }
 
@@ -937,6 +1193,8 @@
 
 
   document.addEventListener("DOMContentLoaded", function () {
+
+    initHouseAds();
 
     const articles = loadArticles();
 
