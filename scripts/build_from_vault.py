@@ -561,11 +561,9 @@ def pick_house_ad(slot: int, slug: str) -> dict[str, str]:
     return HOUSE_ADS[seed % len(HOUSE_ADS)]
 
 
-def house_ad_markup(slot: int, slug: str, placement: str = "") -> str:
-    ad = pick_house_ad(slot, slug)
+def house_ad_inner(ad: dict[str, str]) -> str:
     img = ad.get("image") or ""
     img_alt = escape(ad.get("image_alt") or ad["title"])
-    place_cls = f" house-ad-{placement}" if placement else ""
     media = ""
     if img:
         media = (
@@ -574,7 +572,6 @@ def house_ad_markup(slot: int, slug: str, placement: str = "") -> str:
             f"</div>"
         )
     return (
-        f'<aside class="house-ad-block{place_cls}" aria-label="Promoted: {escape(ad["title"])}">'
         f'<span class="house-ad-label">Promoted</span>'
         f'<a class="house-ad-link" href="{html.escape(ad["url"], quote=True)}" rel="noopener sponsored">'
         f"{media}"
@@ -582,8 +579,23 @@ def house_ad_markup(slot: int, slug: str, placement: str = "") -> str:
         f'<span class="house-ad-title">{escape(ad["title"])}</span>'
         f'<span class="house-ad-line">{escape(ad["line"])}</span>'
         f'<span class="house-ad-cta">{escape(ad["cta"])} ›</span>'
-        f"</div></a></aside>"
+        f"</div></a>"
     )
+
+
+def house_ad_markup(slot: int, slug: str, placement: str = "") -> str:
+    ad = pick_house_ad(slot, slug)
+    place_cls = f" house-ad-{placement}" if placement else ""
+    return (
+        f'<aside class="house-ad-block house-ad-rotate{place_cls}" data-ad-slot="{slot}" '
+        f'aria-label="Promoted: {escape(ad["title"])}">'
+        f"{house_ad_inner(ad)}"
+        f"</aside>"
+    )
+
+
+def house_ads_catalog_json() -> str:
+    return json.dumps(HOUSE_ADS, ensure_ascii=False)
 
 
 def inline_markdown(text: str) -> str:
@@ -820,6 +832,7 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = Tr
   </div>
   {footer_ad}
 </footer>
+<script type="application/json" id="house-ads-data">{house_ads_catalog_json()}</script>
 <script src="{config_js}"></script>
 <script src="{adsense_js}"></script>
 <script src="{js}"></script>
@@ -843,19 +856,19 @@ def render_card(article: dict[str, Any], size: str = "small", depth: int = 0) ->
 
 
 def featured_priority(article: dict[str, Any], today_iso: str) -> tuple[int, int, int]:
-    """Higher sorts first: explicit featured, posted today, then recency."""
-    score = 0
-    if article.get("featured"):
-        score += 1000
-    if article.get("display_date") == today_iso:
-        score += 500
-    if article.get("trending"):
-        score += 200
+    """Higher sorts first: recency, then small boosts for today/trending/featured."""
     try:
         day_ord = date.fromisoformat(article["display_date"]).toordinal()
     except (KeyError, ValueError, TypeError):
         day_ord = 0
-    return (score, day_ord, article.get("_num_id") or 0)
+    boost = 0
+    if article.get("display_date") == today_iso:
+        boost += 3
+    if article.get("trending"):
+        boost += 2
+    if article.get("featured"):
+        boost += 1
+    return (day_ord, boost, article.get("_num_id") or 0)
 
 
 def pick_homepage_featured(
@@ -902,17 +915,17 @@ def render_featured_section(articles: list[dict[str, Any]], depth: int = 0) -> s
     today_iso = date.today().isoformat()
     hero_html = render_fold_hero(featured[0], depth, today_iso=today_iso)
     grid_html = "".join(render_card(a, "medium", depth) for a in featured[1:4])
-    subtitle = ""
-    if featured[0].get("featured") or featured[0].get("display_date") == today_iso:
-        subtitle = '<p class="featured-lede">Lead story · updated for today\'s front page</p>'
+    subtitle = '<p class="featured-lede" id="featured-lede">Latest from the wire · refreshes on load</p>'
+    if featured[0].get("display_date") == today_iso:
+        subtitle = '<p class="featured-lede" id="featured-lede">Lead story · posted today</p>'
     return f"""
 <section class="featured-section" aria-label="Featured">
   <div class="featured-header">
     <h2 class="section-title">Featured</h2>
     {subtitle}
   </div>
-  <div id="fold-hero" class="fold-hero shell">{hero_html}</div>
-  <div id="fold-grid" class="fold-grid shell">{grid_html}</div>
+  <div id="fold-hero" class="fold-hero shell" data-rotate="true">{hero_html}</div>
+  <div id="fold-grid" class="fold-grid shell" data-rotate="true">{grid_html}</div>
 </section>"""
 
 
