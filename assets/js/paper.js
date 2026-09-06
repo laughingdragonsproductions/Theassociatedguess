@@ -820,15 +820,91 @@
 
     const pool = shuffle(ads.slice());
 
-    blocks.forEach(function (block, index) {
+    const indices = blocks.map(function (_, index) {
 
-      const ad = pool[index % pool.length];
+      return index % pool.length;
+
+    });
+
+    function paintBlock(block, ad) {
 
       block.innerHTML = renderHouseAdInner(ad);
 
       block.setAttribute("aria-label", "Promoted: " + (ad.title || ""));
 
-    });
+    }
+
+    function paintAll() {
+
+      blocks.forEach(function (block, index) {
+
+        paintBlock(block, pool[indices[index]]);
+
+      });
+
+    }
+
+    function advanceAds() {
+
+      if (pool.length < 2) {
+
+        return;
+
+      }
+
+      blocks.forEach(function (_, index) {
+
+        indices[index] = (indices[index] + 1) % pool.length;
+
+      });
+
+      if (blocks.length > 1 && pool.length > 1) {
+
+        for (let i = 1; i < blocks.length; i += 1) {
+
+          if (indices[i] === indices[0]) {
+
+            indices[i] = (indices[i] + 1) % pool.length;
+
+          }
+
+        }
+
+      }
+
+      blocks.forEach(function (block) {
+
+        block.classList.add("house-ad-fading");
+
+      });
+
+      window.setTimeout(function () {
+
+        paintAll();
+
+        blocks.forEach(function (block) {
+
+          block.classList.remove("house-ad-fading");
+
+        });
+
+      }, 220);
+
+    }
+
+    paintAll();
+
+    if (
+
+      pool.length > 1 &&
+
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+    ) {
+
+      window.setInterval(advanceAds, 15000);
+
+    }
 
   }
 
