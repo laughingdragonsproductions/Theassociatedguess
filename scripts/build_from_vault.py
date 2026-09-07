@@ -726,6 +726,7 @@ def chrome_head(
     body_class: str = "",
     og_image: str = "",
     og_type: str = "website",
+    include_adsense_script: bool = True,
 ) -> str:
     title = escape(page_title)
     meta_desc = escape(description or TAGLINE)
@@ -744,6 +745,11 @@ def chrome_head(
             og_type=og_type,
         )
     body_attrs = f' class="{escape(body_class)}"' if body_class else ""
+    adsense_script = ""
+    if include_adsense_script:
+        adsense_script = (
+            f'  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_PUBLISHER}" crossorigin="anonymous"></script>\n'
+        )
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -755,8 +761,7 @@ def chrome_head(
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{css}" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_PUBLISHER}" crossorigin="anonymous"></script>
-</head>
+{adsense_script}</head>
 <body{body_attrs} data-site-root="{root_attr}">"""
 
 
@@ -805,6 +810,7 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = Tr
     config_js = site_href("assets/js/config.js", depth)
     adsense_js = site_href("assets/js/adsense.js", depth)
     footer_ad = ad_slot_markup("footer", "ad-slot-footer") if show_ads else ""
+    adsense_script_tag = f'<script src="{adsense_js}"></script>\n' if show_ads else ""
     return f"""
 <footer class="site-footer">
   <div class="footer-grid">
@@ -834,8 +840,7 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = Tr
 </footer>
 <script type="application/json" id="house-ads-data">{house_ads_catalog_json()}</script>
 <script src="{config_js}"></script>
-<script src="{adsense_js}"></script>
-<script src="{js}"></script>
+{adsense_script_tag}<script src="{js}"></script>
 </body>
 </html>"""
 
@@ -1168,6 +1173,7 @@ def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, 
           {article['body_html']}
           {promo_footer(article)}
         </div>
+        <p class="article-satire-note">Satirical fiction from The Associated Guess. Not factual reporting.</p>
         <p class="back-link"><a href="{site_href("index.html", depth)}">← Back to front page</a></p>
       </article>
       {article_house_ad_bottom(article)}
@@ -1241,6 +1247,7 @@ def write_static_pages() -> None:
                 description=description,
                 canonical_path=canonical,
                 body_class="page-static",
+                include_adsense_script=show_ads,
             )
             + chrome_header(on_homepage=False, show_ads=show_ads)
             + f"<main class='page-static'>{header_ad_markup(show_ads)}<h1>{escape(title)}</h1>{body}{footer_promo}</main>"
@@ -1253,6 +1260,7 @@ def write_static_pages() -> None:
             "Search",
             description=f"Search the {BRAND} archive of satirical news stories.",
             canonical_path="search.html",
+            include_adsense_script=False,
         )
         + chrome_header(on_homepage=False, show_ads=False)
         + """

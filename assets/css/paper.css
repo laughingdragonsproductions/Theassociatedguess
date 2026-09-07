@@ -576,6 +576,16 @@ img {
   font-weight: 600;
 }
 
+.article-satire-note {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule, #ddd);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--muted, #666);
+}
+
 .article-subhead {
   font-family: var(--sans);
   font-size: 1rem;
