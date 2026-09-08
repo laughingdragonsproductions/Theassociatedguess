@@ -2,6 +2,27 @@
   "brand": "The Associated Guess",
   "articles": [
     {
+      "id": "dr-4737",
+      "slug": "court-clarifies-life-liberty-pursuit-happiness-not-brita-filter",
+      "title": "Court Clarifies Life, Liberty, and Pursuit of Happiness Do Not Include Brita Filter",
+      "dek": "Fifth Circuit says Mississippi residents may pursue happiness, provided that pursuit does not require potable water or a working understanding of the word potable.",
+      "section": "Politics",
+      "byline": "Grant Woodward",
+      "dateline": "NEW ORLEANS",
+      "promo": "none",
+      "promo_url": "",
+      "read_minutes": 2,
+      "hero_image": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=800&h=500&q=80",
+      "thumb_image": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=400&h=300&q=80",
+      "image_prompt": "Documentary photo of a kitchen faucet pouring brownish water into a glass beside an unused Brita pitcher still in its retail box on the counter.",
+      "published": "2026-09-08",
+      "featured": true,
+      "trending": true,
+      "display_date": "2026-09-08",
+      "display_date_long": "Tuesday, September 8, 2026",
+      "search_text": "Court Clarifies Life, Liberty, and Pursuit of Happiness Do Not Include Brita Filter Fifth Circuit says Mississippi residents may pursue happiness, provided that pursuit does not require potable water or a working understanding of the word potable. Politics Grant Woodward NEW ORLEANS court clarifies life liberty pursuit happiness not brita filter NEW ORLEANS  -  A federal appeals court held Tuesday that the Constitution does not guarantee a right to clean drinking water, a ruling legal scholars described as narrow, consequential, and extremely inconvenient for anyone who has ever used the word hydration in a sentence.\n\nThe Fifth Circuit dismissed a lawsuit brought by Mississippi residents over lead-contaminated water, finding that while life, liberty, and the pursuit of happiness remain foundational, they do not extend to filtered tap, u"
+    },
+    {
       "id": "dr-4621",
       "slug": "spirit-airlines-broke-boy-fare-gta-6",
       "title": "Spirit Airlines Unveils Broke Boy Fare Class In Honor Of GTA 6",
