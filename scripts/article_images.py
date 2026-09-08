@@ -61,7 +61,6 @@ VERIFIED_PHOTO_IDS: frozenset[str] = frozenset(
         "1498050108023-c5249f4df085",
         "1555949963-aa79dcee981c",
         "1550751827-4bd374c3f58b",
-        "1560518883-ce09059eeffa",
         "1554224155-6726b3ff858f",
         "1573865526739-10659fec78a5",
         "1556911220-bff31c812dba",
@@ -134,7 +133,7 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "election",
         "keywords": ["vote", "voting", "election", "ballot", "citizens to vote", "mandatory vote"],
-        "photos": ["1554224155-6726b3ff858f", "1560518883-ce09059eeffa"],
+        "photos": ["1554224155-6726b3ff858f"],
     },
     {
         "id": "gym",
@@ -203,7 +202,6 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
         "id": "government",
         "keywords": ["council", "mayor", "congress", "hearing", "election", "vote", "law", "ordinance", "city hall", "pentagon", "government"],
         "photos": [
-            "1560518883-ce09059eeffa",
             "1556761175-b413da4baf72",
             "1449824913935-59a10b8d2000",
             "1522071820081-009f0129c71c",
