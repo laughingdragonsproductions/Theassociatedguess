@@ -79,6 +79,15 @@ git commit -m "TAG: AdSense display slot IDs"
 git push origin main
 ```
 
+**One-command apply** (paste your three slot IDs):
+
+```powershell
+powershell -File G:\LocalAIagent\Theassociatedguess\scripts\apply-tag-adsense-slots.ps1 `
+  -Header "PASTE_HEADER_SLOT" `
+  -InContent "PASTE_ARTICLE_SLOT" `
+  -Footer "PASTE_FOOTER_SLOT"
+```
+
 ---
 
 ## §2. EU CMP → closes matrix **P3**
