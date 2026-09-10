@@ -314,7 +314,7 @@ SLUG_PHOTO_OVERRIDES: dict[str, str] = {
     "virtual-reality-conference": "1593508512255-86ab42a8e620",
     "tech-ceo-apologizes-for-calling-everything-ai-when-its-just-math": "1454165804606-c3d57bc86b40",
     "new-law-requires-all-citizens-to-vote-in-the-next-election": "1554224155-6726b3ff858f",
-    "congress-discovers-future-already-happened-schedules-hearing": "1560518883-ce09059eeffa",
+    "congress-discovers-future-already-happened-schedules-hearing": "1556761175-b413da4baf72",
     "nations-smart-fridges-hold-emergency-meeting-about-leftovers": "1556911220-bff31c812dba",
     "fda-approves-new-drug-that-only-treats-symptoms-of-reading-the-news": "1571019613454-1cb2f99b2d8b",
 }
