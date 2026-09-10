@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
+import json
 import re
 import urllib.error
 import urllib.request
+from pathlib import Path
 from typing import Any
+
+IMAGE_QUEUE_PATH = Path(r"G:\openclaw\business\satire-news\image-queue.json")
+HERO_ASSETS_DIR = Path(r"G:\LocalAIagent\Theassociatedguess\assets\images")
+# Neutral wire-photo placeholder until Lens hero is approved (not food/pizza stock).
+PENDING_HERO_PHOTO = "1512941937669-90a1b58e7e9c"
 
 # Verified Unsplash photo IDs (GET-tested). Do not add IDs without running validate_images.py.
 VERIFIED_PHOTO_IDS: frozenset[str] = frozenset(
@@ -152,7 +159,19 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     },
     {
         "id": "phone",
-        "keywords": ["phone", "smartphone", "group chat", "eclipse glasses", "headline", "pill", "news app"],
+        "keywords": [
+            "phone",
+            "smartphone",
+            "iphone",
+            "ios",
+            "apple",
+            "homekit",
+            "group chat",
+            "eclipse glasses",
+            "headline",
+            "pill",
+            "news app",
+        ],
         "photos": ["1512941937669-90a1b58e7e9c", "1516321318423-f06f85e504b3"],
     },
     {
@@ -317,6 +336,7 @@ SLUG_PHOTO_OVERRIDES: dict[str, str] = {
     "congress-discovers-future-already-happened-schedules-hearing": "1556761175-b413da4baf72",
     "nations-smart-fridges-hold-emergency-meeting-about-leftovers": "1556911220-bff31c812dba",
     "fda-approves-new-drug-that-only-treats-symptoms-of-reading-the-news": "1571019613454-1cb2f99b2d8b",
+    "ios-27-release-date": "1512941937669-90a1b58e7e9c",
 }
 
 SLUG_OVERRIDES: dict[str, str] = {
@@ -439,6 +459,16 @@ def photo_url_reachable(url: str, timeout: float = 12.0) -> bool:
         return False
 
 
+def _image_queue_pending_slugs() -> set[str]:
+    if not IMAGE_QUEUE_PATH.is_file():
+        return set()
+    try:
+        data = json.loads(IMAGE_QUEUE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    return {str(item.get("slug") or "") for item in data.get("pending") or [] if item.get("slug")}
+
+
 def pick_article_images(
     *,
     article_id: str,
@@ -452,6 +482,14 @@ def pick_article_images(
     """Return (hero_url, thumb_url) best matching the article concept."""
     if image_prompt.startswith("http://") or image_prompt.startswith("https://"):
         return image_prompt, image_prompt
+
+    local_png = HERO_ASSETS_DIR / f"{slug}.png"
+    if local_png.is_file():
+        url = f"https://theassociatedguess.com/assets/images/{slug}.png"
+        return url, url
+
+    if slug in _image_queue_pending_slugs():
+        return _unsplash(PENDING_HERO_PHOTO, 800, 500), _unsplash(PENDING_HERO_PHOTO, 400, 300)
 
     pinned_photo = SLUG_PHOTO_OVERRIDES.get(slug)
     if pinned_photo and pinned_photo in VERIFIED_PHOTO_IDS:
