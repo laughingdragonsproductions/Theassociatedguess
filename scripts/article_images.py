@@ -71,6 +71,9 @@ VERIFIED_PHOTO_IDS: frozenset[str] = frozenset(
         "1554224155-6726b3ff858f",
         "1573865526739-10659fec78a5",
         "1556911220-bff31c812dba",
+        "1502877338535-766e1452684a",
+        "1572595980019-acecd39bb149",
+        "1433952206545-f507af9b26fd",
     }
 )
 
@@ -237,8 +240,31 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
         "photos": ["1564013799919-ab600027ffc6"],
     },
     {
+        "id": "road",
+        "keywords": [
+            "road rage",
+            "highway",
+            "dot",
+            "transportation",
+            "motorist",
+            "driver",
+            "lane",
+            "honking",
+            "freeway",
+            "traffic jam",
+            "expression lane",
+            "red light",
+        ],
+        "photos": [
+            "1572595980019-acecd39bb149",
+            "1449824913935-59a10b8d2000",
+            "1433952206545-f507af9b26fd",
+            "1502877338535-766e1452684a",
+        ],
+    },
+    {
         "id": "city",
-        "keywords": ["crosswalk", "pedestrian", "button", "traffic", "road rage", "clipboard", "driver", "parking", "crosswalk"],
+        "keywords": ["crosswalk", "pedestrian", "button", "traffic", "clipboard", "parking", "crosswalk"],
         "photos": ["1449824913935-59a10b8d2000", "1564013799919-ab600027ffc6"],
     },
     {
@@ -338,6 +364,7 @@ SLUG_PHOTO_OVERRIDES: dict[str, str] = {
     "fda-approves-new-drug-that-only-treats-symptoms-of-reading-the-news": "1571019613454-1cb2f99b2d8b",
     "weather-service-adds-existential-drizzle-to-forecast": "1560472354-b33ff0c44a43",
     "cdc-issues-guidance-on-touching-grass-safely": "1506905925346-21bda4d32df4",
+    "dot-requires-all-road-rage-to-be-submitted-in-writing": "1572595980019-acecd39bb149",
     "ios-27-release-date": "1512941937669-90a1b58e7e9c",
 }
 
@@ -378,6 +405,7 @@ SLUG_OVERRIDES: dict[str, str] = {
     "fda-approves-new-drug-that-only-treats-symptoms-of-reading-the-news": "health",
     "weather-service-adds-existential-drizzle-to-forecast": "weather",
     "cdc-issues-guidance-on-touching-grass-safely": "park",
+    "dot-requires-all-road-rage-to-be-submitted-in-writing": "road",
     "viral-video-contest": "video",
 }
 
