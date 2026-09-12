@@ -336,6 +336,8 @@ SLUG_PHOTO_OVERRIDES: dict[str, str] = {
     "congress-discovers-future-already-happened-schedules-hearing": "1556761175-b413da4baf72",
     "nations-smart-fridges-hold-emergency-meeting-about-leftovers": "1556911220-bff31c812dba",
     "fda-approves-new-drug-that-only-treats-symptoms-of-reading-the-news": "1571019613454-1cb2f99b2d8b",
+    "weather-service-adds-existential-drizzle-to-forecast": "1560472354-b33ff0c44a43",
+    "cdc-issues-guidance-on-touching-grass-safely": "1506905925346-21bda4d32df4",
     "ios-27-release-date": "1512941937669-90a1b58e7e9c",
 }
 
@@ -374,6 +376,8 @@ SLUG_OVERRIDES: dict[str, str] = {
     "congress-discovers-future-already-happened-schedules-hearing": "government",
     "nations-smart-fridges-hold-emergency-meeting-about-leftovers": "smart_home",
     "fda-approves-new-drug-that-only-treats-symptoms-of-reading-the-news": "health",
+    "weather-service-adds-existential-drizzle-to-forecast": "weather",
+    "cdc-issues-guidance-on-touching-grass-safely": "park",
     "viral-video-contest": "video",
 }
 
@@ -469,7 +473,7 @@ def _image_queue_pending_slugs() -> set[str]:
     return {str(item.get("slug") or "") for item in data.get("pending") or [] if item.get("slug")}
 
 
-def pick_article_images(
+def _match_topic_photo(
     *,
     article_id: str,
     slug: str,
@@ -477,25 +481,14 @@ def pick_article_images(
     dek: str,
     section: str,
     body: str,
-    image_prompt: str = "",
+    image_prompt: str,
 ) -> tuple[str, str]:
-    """Return (hero_url, thumb_url) best matching the article concept."""
-    if image_prompt.startswith("http://") or image_prompt.startswith("https://"):
-        return image_prompt, image_prompt
-
-    local_png = HERO_ASSETS_DIR / f"{slug}.png"
-    if local_png.is_file():
-        url = f"https://theassociatedguess.com/assets/images/{slug}.png"
-        return url, url
-
-    if slug in _image_queue_pending_slugs():
-        return _unsplash(PENDING_HERO_PHOTO, 800, 500), _unsplash(PENDING_HERO_PHOTO, 400, 300)
+    seed = f"{article_id}:{slug}"
 
     pinned_photo = SLUG_PHOTO_OVERRIDES.get(slug)
     if pinned_photo and pinned_photo in VERIFIED_PHOTO_IDS:
         return _unsplash(pinned_photo, 800, 500), _unsplash(pinned_photo, 400, 300)
 
-    seed = f"{article_id}:{slug}"
     override_id = SLUG_OVERRIDES.get(slug)
     if override_id:
         topic = _topic_by_id(override_id)
@@ -526,3 +519,37 @@ def pick_article_images(
 
     photo = _pick_photo(best_topic, seed)
     return _unsplash(photo, 800, 500), _unsplash(photo, 400, 300)
+
+
+def pick_article_images(
+    *,
+    article_id: str,
+    slug: str,
+    title: str,
+    dek: str,
+    section: str,
+    body: str,
+    image_prompt: str = "",
+) -> tuple[str, str]:
+    """Return (hero_url, thumb_url) best matching the article concept."""
+    if image_prompt.startswith("http://") or image_prompt.startswith("https://"):
+        if photo_url_reachable(image_prompt):
+            return image_prompt, image_prompt
+
+    local_png = HERO_ASSETS_DIR / f"{slug}.png"
+    if local_png.is_file():
+        url = f"https://theassociatedguess.com/assets/images/{slug}.png"
+        if photo_url_reachable(url):
+            return url, url
+
+    # Pending Lens queue: topic-matched stock is fine until custom hero lands.
+    # Do not force the shared phone placeholder — that caused 60+ duplicate heroes.
+    return _match_topic_photo(
+        article_id=article_id,
+        slug=slug,
+        title=title,
+        dek=dek,
+        section=section,
+        body=body,
+        image_prompt=image_prompt,
+    )

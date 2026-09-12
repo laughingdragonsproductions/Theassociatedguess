@@ -22,6 +22,10 @@ if str(DESKTOP_AGENT) not in sys.path:
     sys.path.insert(0, str(DESKTOP_AGENT))
 
 from integrations.satire_vault_monitor import ID_RE, parse_frontmatter  # noqa: E402
+from integrations.vault_article_usage import (  # noqa: E402
+    is_backlog_eligible,
+    purge_vault_duplicates,
+)
 
 from article_images import pick_article_images  # noqa: E402
 
@@ -269,13 +273,27 @@ def normalize_dashes(text: str) -> str:
     return text.replace("\u2014", " - ")
 
 
+def is_publishable_vault_article(path: Path) -> bool:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    if not text.lstrip().startswith("---"):
+        return False
+    meta = parse_frontmatter(text)
+    return bool(str(meta.get("title") or "").strip())
+
+
 def find_pending_backlog_articles() -> list[Path]:
     if not BACKLOG.is_dir():
         return []
     return [
         p
         for p in sorted(BACKLOG.glob("*.md"))
-        if not is_excluded_path(p) and p.name.lower() != "readme.md"
+        if not is_excluded_path(p)
+        and p.name.lower() != "readme.md"
+        and is_publishable_vault_article(p)
+        and is_backlog_eligible(p, VAULT)
     ]
 
 
@@ -391,7 +409,14 @@ def publish_one_pending(live_date: date | None = None) -> dict[str, Any]:
         }
     )
     MANIFEST_PATH.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    return {"published": src.name, "live_date": pub_str, "source": source_queue, "dest": str(dest)}
+    dedup = purge_vault_duplicates(dest, vault=VAULT)
+    return {
+        "published": src.name,
+        "live_date": pub_str,
+        "source": source_queue,
+        "dest": str(dest),
+        "dedup_removed": dedup.get("removed") or [],
+    }
 
 
 def normalize_section(raw: str) -> str:
