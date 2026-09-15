@@ -65,15 +65,21 @@ def file_sha256(path: Path) -> str | None:
 
 
 def scan_binary_duplicate_assets() -> dict[str, list[str]]:
-    """Same PNG bytes saved under different filenames."""
+    """Same image bytes saved under different filenames."""
     by_hash: dict[str, list[str]] = defaultdict(list)
     if not HERO_ASSETS_DIR.is_dir():
         return {}
-    for path in sorted(HERO_ASSETS_DIR.glob("*.png")):
+    for path in sorted(HERO_ASSETS_DIR.iterdir()):
+        if path.suffix.lower() not in {".png", ".jpg", ".jpeg", ".webp"}:
+            continue
         digest = file_sha256(path)
         if digest:
             by_hash[digest].append(path.name)
     return {digest: names for digest, names in by_hash.items() if len(names) > 1}
+
+
+def hero_asset_filename(slug: str) -> str:
+    return f"{slug}.png"
 
 
 def collect_articles(*, include_drafts: bool) -> list[dict[str, Any]]:
@@ -129,13 +135,41 @@ def build_duplicate_report(articles: list[dict[str, Any]]) -> dict[str, Any]:
         for digest, names in scan_binary_duplicate_assets().items()
     ]
 
+    generation_queue: list[dict[str, Any]] = []
+    for group in duplicate_groups:
+        key = str(group.get("image_key") or "")
+        shared_with = int(group.get("count") or 0)
+        for row in group.get("articles") or []:
+            slug = str(row.get("slug") or "")
+            generation_queue.append(
+                {
+                    "slug": slug,
+                    "title": row.get("title"),
+                    "save_as": hero_asset_filename(slug),
+                    "current_image_key": key,
+                    "shared_with": shared_with,
+                    "image_prompt": row.get("image_prompt") or "",
+                    "published": row.get("published") or "",
+                }
+            )
+    generation_queue.sort(key=lambda row: (-int(row.get("shared_with") or 0), str(row.get("slug") or "")))
+
+    custom_asset_slugs = {
+        str(article.get("slug") or "")
+        for article in articles
+        if str(article.get("hero_image") or "").find("/assets/images/") >= 0
+    }
+
     return {
         "generated_at": datetime.now(UTC).isoformat(),
         "article_count": len(articles),
         "unique_images": len(by_image),
         "duplicate_image_groups": len(duplicate_groups),
         "articles_sharing_a_duplicate": sum(g["count"] for g in duplicate_groups),
+        "articles_needing_unique_hero": len(generation_queue),
+        "articles_with_custom_asset": len(custom_asset_slugs),
         "binary_asset_duplicates": binary_dupes,
+        "generation_queue": generation_queue,
         "groups": duplicate_groups,
     }
 
@@ -149,56 +183,68 @@ def render_bulk_art_csv(report: dict[str, Any]) -> str:
     writer = csv.writer(buffer)
     writer.writerow(
         [
+            "priority",
+            "save_as",
             "slug",
             "title",
-            "dek",
-            "section",
             "published",
-            "image_prompt",
+            "shared_with_count",
             "current_image_key",
+            "image_prompt",
             "needs_unique_hero",
         ]
     )
-    for group in report.get("groups") or []:
-        key = str(group.get("image_key") or "")
-        for row in group.get("articles") or []:
-            writer.writerow(
-                [
-                    row.get("slug") or "",
-                    row.get("title") or "",
-                    row.get("dek") or "",
-                    row.get("section") or "",
-                    row.get("published") or "",
-                    row.get("image_prompt") or "",
-                    key,
-                    "yes",
-                ]
-            )
+    for index, row in enumerate(report.get("generation_queue") or [], start=1):
+        writer.writerow(
+            [
+                index,
+                row.get("save_as") or "",
+                row.get("slug") or "",
+                row.get("title") or "",
+                row.get("published") or "",
+                row.get("shared_with") or "",
+                row.get("current_image_key") or "",
+                row.get("image_prompt") or "",
+                "yes",
+            ]
+        )
     return buffer.getvalue()
 
 
 def render_markdown(report: dict[str, Any]) -> str:
+    queue = report.get("generation_queue") or []
     lines = [
         "# The Associated Guess — duplicate hero images",
         "",
         f"- Generated: {report.get('generated_at', '')}",
         f"- Articles scanned: {report.get('article_count', 0)}",
-        f"- Unique hero images: {report.get('unique_images', 0)}",
+        f"- Articles with custom `/assets/images/` hero: {report.get('articles_with_custom_asset', 0)}",
+        f"- **Generate unique art for: {report.get('articles_needing_unique_hero', 0)} articles**",
         f"- Duplicate image groups: {report.get('duplicate_image_groups', 0)}",
-        f"- Articles in a duplicate group: {report.get('articles_sharing_a_duplicate', 0)}",
         "",
-        "Use this list to generate unique hero art in bulk. Each group shares the same resolved hero image.",
+        "## Bulk generation checklist",
         "",
+        "Save each file to `Theassociatedguess/assets/images/{slug}.png`, then set vault `image_prompt` to the live URL or rebuild.",
+        "",
+        "| # | Save as | Slug | Shared with | Scene prompt |",
+        "|---|---------|------|-------------|--------------|",
     ]
+    for index, row in enumerate(queue, start=1):
+        slug = str(row.get("slug") or "")
+        save_as = str(row.get("save_as") or hero_asset_filename(slug))
+        shared = str(row.get("shared_with") or "")
+        prompt = str(row.get("image_prompt") or "(empty — write a scene from headline/dek)").replace("|", "\\|")[:100]
+        lines.append(f"| {index} | `{save_as}` | `{slug}` | {shared} | {prompt} |")
+    lines.extend(["", "CSV for Flow/Lens: `duplicate-images-bulk-art.csv`", ""])
 
     binary = report.get("binary_asset_duplicates") or []
     if binary:
-        lines.extend(["## Identical PNG files (different filenames)", ""])
+        lines.extend(["## Identical image files (different filenames)", ""])
         for row in binary:
             lines.append(f"- `{', '.join(row['filenames'])}`")
         lines.append("")
 
-    lines.append("## Duplicate hero groups")
+    lines.append("## Duplicate hero groups (detail)")
     lines.append("")
     for group in report.get("groups") or []:
         lines.extend(
@@ -253,6 +299,8 @@ def main() -> int:
     print(json.dumps({
         "articles": report["article_count"],
         "duplicate_groups": report["duplicate_image_groups"],
+        "articles_needing_unique_hero": report.get("articles_needing_unique_hero", 0),
+        "articles_with_custom_asset": report.get("articles_with_custom_asset", 0),
         "articles_in_duplicates": report["articles_sharing_a_duplicate"],
         "pending_placeholder_articles": placeholder_count,
         "markdown": str(args.markdown),

@@ -549,6 +549,23 @@ def _match_topic_photo(
     return _unsplash(photo, 800, 500), _unsplash(photo, 400, 300)
 
 
+def _local_asset_url(slug: str) -> str | None:
+    for ext in (".png", ".jpg", ".jpeg", ".webp"):
+        if (HERO_ASSETS_DIR / f"{slug}{ext}").is_file():
+            return f"https://theassociatedguess.com/assets/images/{slug}{ext}"
+    return None
+
+
+def _asset_url_from_prompt(image_prompt: str) -> str | None:
+    match = re.search(r"/assets/images/([^/?#]+)", image_prompt, re.I)
+    if not match:
+        return None
+    filename = match.group(1)
+    if (HERO_ASSETS_DIR / filename).is_file():
+        return f"https://theassociatedguess.com/assets/images/{filename}"
+    return None
+
+
 def pick_article_images(
     *,
     article_id: str,
@@ -561,14 +578,15 @@ def pick_article_images(
 ) -> tuple[str, str]:
     """Return (hero_url, thumb_url) best matching the article concept."""
     if image_prompt.startswith("http://") or image_prompt.startswith("https://"):
+        local_from_prompt = _asset_url_from_prompt(image_prompt)
+        if local_from_prompt:
+            return local_from_prompt, local_from_prompt
         if photo_url_reachable(image_prompt):
             return image_prompt, image_prompt
 
-    local_png = HERO_ASSETS_DIR / f"{slug}.png"
-    if local_png.is_file():
-        url = f"https://theassociatedguess.com/assets/images/{slug}.png"
-        if photo_url_reachable(url):
-            return url, url
+    local_url = _local_asset_url(slug)
+    if local_url:
+        return local_url, local_url
 
     # Pending Lens queue: topic-matched stock is fine until custom hero lands.
     # Do not force the shared phone placeholder — that caused 60+ duplicate heroes.
