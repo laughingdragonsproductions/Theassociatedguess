@@ -48,8 +48,7 @@ SECTIONS = [
     "Strange America",
 ]
 BRAND = "The Associated Guess"
-TAGLINE = "NEWS WORTH A CLOSER LOOK"
-TAG_MARK_PATH = "assets/images/tag-mark.png"
+TAGLINE = "SERIOUS NEWS. ABSURD WORLD."
 DOMAIN = "theassociatedguess.com"
 ADSENSE_PUBLISHER = "ca-pub-7048606415692002"
 CONTACT_EMAIL = "laughingdragonsproductions@gmail.com"
@@ -897,23 +896,6 @@ def chrome_head(
 <body{body_attrs} data-site-root="{root_attr}">"""
 
 
-def masthead_brand_markup(home: str, depth: int) -> str:
-    mark = site_href(TAG_MARK_PATH, depth)
-    return f"""
-    <div class="masthead-brand">
-      <a href="{home}" class="masthead-mark" aria-label="TAG — {escape(BRAND)}">
-        <img src="{mark}" alt="TAG" class="masthead-mark-img" width="180" height="74" />
-      </a>
-      <span class="masthead-divider" aria-hidden="true"></span>
-      <div class="masthead-wordmark">
-        <a href="{home}" class="masthead-name">
-          <span class="name-part">THE </span><span class="name-part name-red">ASSOCIATED </span><span class="name-part">GUESS</span>
-        </a>
-        <p class="masthead-tagline">{escape(TAGLINE)}</p>
-      </div>
-    </div>"""
-
-
 def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = False, show_ads: bool = True) -> str:
     today = datetime.now().strftime("%A, %B %d, %Y").replace(" 0", " ")
     home = site_href("index.html", depth)
@@ -935,7 +917,10 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
   </div>
   <div class="masthead-row">
     <div class="weather-widget">72°F · Partly Absurd · Millfield</div>
-    <div class="masthead-center">{masthead_brand_markup(home, depth)}</div>
+    <div class="masthead-center">
+      <a href="{home}" class="masthead-logo">{escape(BRAND)}</a>
+      <p class="masthead-tagline">{escape(TAGLINE)}</p>
+    </div>
     <form class="search-box" action="{site_href("search.html", depth)}" method="get" role="search">
       <input type="search" name="q" placeholder="Search" aria-label="Search stories" autocomplete="off" />
     </form>

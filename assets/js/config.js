@@ -3,7 +3,7 @@ window.SITE_CONFIG = {
   name: "The Associated Guess",
   legalName: "Laughing Dragons Productions",
   publisherBrand: "The Associated Guess",
-  tagline: "NEWS WORTH A CLOSER LOOK",
+  tagline: "SERIOUS NEWS. ABSURD WORLD.",
   domain: "https://theassociatedguess.com",
   contactEmail: "laughingdragonsproductions@gmail.com",
   tipsEmail: "tips@theassociatedguess.com",
