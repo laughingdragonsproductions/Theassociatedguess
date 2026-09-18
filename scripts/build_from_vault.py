@@ -9,6 +9,7 @@ import json
 import re
 import shutil
 import sys
+from urllib.parse import quote
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -49,6 +50,26 @@ SECTIONS = [
     "Opinion",
     "Strange America",
 ]
+SECTION_INTROS: dict[str, str] = {
+    "News": "National and international coverage from The Associated Guess wire desk — deadlines met, facts optional, tone immaculate.",
+    "Politics": "Legislative bodies, executive branches, and committees doing their best under circumstances they invented.",
+    "Business": "Markets, mergers, and CEO apologies — reported with the gravity your portfolio deserves and your accountant fears.",
+    "Science": "Peer-reviewed chaos from labs that publish first and ask questions during the press conference.",
+    "Culture": "Arts, entertainment, and the public's ongoing negotiation with fame, streaming, and artisanal bread.",
+    "Local": "City halls, school boards, and neighbors who have strong feelings about leaves, squirrels, and parking.",
+    "Opinion": "Essays and columns from writers who believe the country deserves their unsolicited clarity.",
+    "Strange America": "Dispatch from the bureau that handles everything the other desks forwarded with the subject line \"you deal with this.\"",
+}
+BYLINE_BIOS: dict[str, str] = {
+    "Brandon Sparks": "Business correspondent covering festivals, launches, and corporate statements that sound like poetry written by a lawyer.",
+    "Mara Kestrel": "Technology and culture reporter; previously covered three product cycles that never shipped.",
+    "Claire Undertow": "Local affairs editor based in Portland; specializes in municipal pilots that should remain pilots.",
+    "Jordan Pike": "National security and defense writer; has never been cleared to see the spreadsheet.",
+    "Tomás Reyes": "City hall reporter; fluent in ordinance numbers and the sound of a gavel hitting hope.",
+    "Mae Holloway": "Food and small-business beat; documents bakeries, ghosts, and the overlap between the two.",
+    "Casey Holt": "Investigations desk; prefers documents that arrive in manila folders labeled \"probably fine.\"",
+    "Staff": "The Associated Guess wire desk — rotating bylines on breaking absurdity.",
+}
 BRAND = "The Associated Guess"
 TAGLINE = "SERIOUS NEWS. ABSURD WORLD."
 DOMAIN = "theassociatedguess.com"
@@ -65,6 +86,11 @@ ABOUT_HTML = """
 <p>We are independent. We are obsessive about craft. We believe the reader should finish an article slightly more informed and significantly more concerned than when they started - whether the subject is the economy, the climate, or the behavioral standards now expected of smart refrigerators.</p>
 <p>If something on our front page strikes you as unlikely, read it again. Read the quotes. Follow the logic. We trust you to draw your own conclusions. We have already drawn ours.</p>
 <p class="about-signature"><em>SERIOUS NEWS. ABSURD WORLD.</em>  -  The Editors</p>
+<section class="about-newsroom">
+  <h2>Our newsroom</h2>
+  <p>The Associated Guess maintains a distributed editorial staff — writers, editors, and a standards desk that treats every dateline as a promise and every quote as an opportunity. We file from invented bureaus in Millfield, Portland, Geneva, and wherever the story requires a municipal official with a clipboard.</p>
+  <p>Meet the team on our <a href="newsroom.html">Newsroom</a> page. For syndication and reprint questions, see <a href="reprints.html">Reprints &amp; permissions</a>.</p>
+</section>
 <section class="about-real">
   <h2>Who publishes this</h2>
   <p><strong>The Associated Guess</strong> is a satirical news property operated by <strong>{legal}</strong>, an independent media and maker studio. This site is part of the Laughing Dragons portfolio alongside games, tools, podcasts, and shop projects hosted at <a href="{parent}" rel="noopener">{parent_host}</a>.</p>
@@ -192,6 +218,58 @@ CORRECTIONS_HTML = """
 <p>We do not “correct” fictional plot points in satire pieces — the story is invented. We do correct anything that affects reader trust or site integrity.</p>
 """.format(tips=TIPS_EMAIL)
 
+NEWSROOM_HTML = """
+<p>The Associated Guess is edited by a small, obsessive staff. Names below are editorial personas for our parody publication — contact the studio for real inquiries.</p>
+<div class="newsroom-grid">
+  <article class="newsroom-card">
+    <h2>Eleanor Vance</h2>
+    <p class="newsroom-role">Editor in Chief</p>
+    <p>Former metro editor who believes every story deserves a dateline, two sources, and at least one municipal official who regrets picking up the phone. Oversees daily publication and the standards desk.</p>
+  </article>
+  <article class="newsroom-card">
+    <h2>Marcus Hale</h2>
+    <p class="newsroom-role">Managing Editor</p>
+    <p>Runs the wire desk and nightly rebuild. Responsible for archive integrity, headline clarity, and removing production notes before anything reaches the homepage.</p>
+  </article>
+  <article class="newsroom-card">
+    <h2>Claire Undertow</h2>
+    <p class="newsroom-role">Local &amp; National Editor</p>
+    <p>Assigns city hall, transportation, and \"this can't be real but here we are\" pieces. Based in Portland; travels by crosswalk button.</p>
+  </article>
+  <article class="newsroom-card">
+    <h2>Dr. Nora Whitfield</h2>
+    <p class="newsroom-role">Science &amp; Business Editor</p>
+    <p>Reviews studies, earnings calls, and press releases that confuse correlation with confidence. Insists on at least one skeptical quote per piece.</p>
+  </article>
+  <article class="newsroom-card">
+    <h2>Standards Desk</h2>
+    <p class="newsroom-role">Corrections &amp; labeling</p>
+    <p>Maintains <a href="editorial-standards.html">editorial standards</a>, processes <a href="corrections.html">correction requests</a>, and ensures partner announcements are labeled in copy. Reach: <a href="mailto:{tips}">{tips}</a>.</p>
+  </article>
+</div>
+<p class="newsroom-note"><strong>Note:</strong> All newsroom personas and quoted officials in our stories are fictional. This page describes our editorial voice, not a literal org chart.</p>
+""".format(tips=TIPS_EMAIL)
+
+REPRINTS_HTML = """
+<p><strong>The Associated Guess</strong> welcomes links to our stories. Full-text republication requires permission.</p>
+<h2>What you may do without asking</h2>
+<ul>
+  <li>Link to any story URL on {domain} with accurate headline attribution.</li>
+  <li>Quote up to <strong>75 words</strong> with a clear link back and visible note that the source is parody fiction.</li>
+  <li>Share on social platforms using our Open Graph previews — do not strip parody disclaimers.</li>
+</ul>
+<h2>What requires permission</h2>
+<ul>
+  <li>Republishing full articles on another site, app, or print product.</li>
+  <li>Commercial reuse of headlines, dek copy, or hero images.</li>
+  <li>Translation or adaptation for broadcast.</li>
+</ul>
+<h2>How to request</h2>
+<p>Email <a href="mailto:{tips}">{tips}</a> with the story URL, intended use, territory, and run dates. We respond within a few business days.</p>
+<h2>Partner announcements</h2>
+<p>Pieces labeled as partner or portfolio announcements may include outbound links to real products and events. Reprint those sections only with original disclaimers intact.</p>
+""".format(domain=DOMAIN, tips=TIPS_EMAIL)
+
 TERMS_HTML = """
 <p><strong>Last updated:</strong> September 18, 2026</p>
 <p><strong>The Associated Guess</strong> ({domain}) is a satirical news publication operated by <strong>{legal}</strong>. Stories are fictional parody and should not be read as factual reporting.</p>
@@ -236,6 +314,26 @@ def home_anchor(fragment: str, depth: int = 0, on_homepage: bool = False) -> str
     if on_homepage:
         return f"#{tag}"
     return f"{site_href('index.html', depth)}#{tag}"
+
+
+def section_slug(section: str) -> str:
+    return section.lower().replace(" ", "-")
+
+
+def section_href(section: str, depth: int = 0, on_homepage: bool = False) -> str:
+    slug = section_slug(section)
+    if on_homepage:
+        return f"#{slug}"
+    return site_href(f"section/{slug}.html", depth)
+
+
+def edition_line() -> str:
+    day_num = datetime.now().timetuple().tm_yday
+    return f"Vol. I · No. {day_num} · Millfield Bureau"
+
+
+def byline_bio(name: str) -> str:
+    return BYLINE_BIOS.get(name.strip()) or BYLINE_BIOS["Staff"]
 
 
 def extract_body(text: str) -> str:
@@ -909,9 +1007,9 @@ def social_meta_tags(
     return "\n".join(tags) + "\n"
 
 
-def site_disclaimer_bar(depth: int = 0) -> str:
+def footer_disclaimer(depth: int = 0) -> str:
     return f"""
-<div class="site-disclaimer" role="note">
+<div class="footer-disclaimer" role="note">
   <p><strong>Parody publication.</strong> {escape(BRAND)} publishes original fictional news for entertainment — not factual reporting. Partner announcements are labeled in the story. <a href="{site_href("about.html", depth)}">About</a> · <a href="{site_href("editorial-standards.html", depth)}">Editorial standards</a> · <a href="{site_href("corrections.html", depth)}">Corrections</a></p>
 </div>"""
 
@@ -926,11 +1024,123 @@ def org_json_ld() -> str:
         "email": CONTACT_EMAIL,
         "sameAs": [PARENT_SITE],
         "publishingPrinciples": f"https://{DOMAIN}/editorial-standards.html",
+        "masthead": f"https://{DOMAIN}/newsroom.html",
+    }
+    website = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": BRAND,
+        "url": f"https://{DOMAIN}/",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": f"https://{DOMAIN}/search.html?q={{search_term_string}}",
+            "query-input": "required name=search_term_string",
+        },
     }
     return (
         '<script type="application/ld+json">'
         + json.dumps(payload, ensure_ascii=False)
+        + "</script>\n"
+        + '<script type="application/ld+json">'
+        + json.dumps(website, ensure_ascii=False)
         + "</script>"
+    )
+
+
+def article_json_ld(article: dict[str, Any]) -> str:
+    pub = article.get("display_date") or article.get("published") or ""
+    payload = {
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        "headline": article.get("title") or "",
+        "description": article.get("dek") or "",
+        "datePublished": pub,
+        "dateModified": pub,
+        "author": {"@type": "Person", "name": article.get("byline") or "Staff"},
+        "publisher": {
+            "@type": "NewsMediaOrganization",
+            "name": BRAND,
+            "url": f"https://{DOMAIN}/",
+        },
+        "mainEntityOfPage": f"https://{DOMAIN}/article/{article.get('slug')}/",
+        "isAccessibleForFree": True,
+    }
+    if article.get("hero_image"):
+        payload["image"] = [article["hero_image"]]
+    if (article.get("kind") or "").strip().lower() != "real":
+        payload["genre"] = "Satire"
+    return (
+        '<script type="application/ld+json">'
+        + json.dumps(payload, ensure_ascii=False)
+        + "</script>"
+    )
+
+
+def render_article_breadcrumb(article: dict[str, Any], depth: int) -> str:
+    section = article.get("section") or "News"
+    sec_slug = section_slug(section)
+    return f"""
+<nav class="article-breadcrumb" aria-label="Breadcrumb">
+  <ol>
+    <li><a href="{site_href("index.html", depth)}">Home</a></li>
+    <li><a href="{site_href(f"section/{sec_slug}.html", depth)}">{escape(section)}</a></li>
+    <li aria-current="page">{escape(article.get("title") or "")}</li>
+  </ol>
+</nav>"""
+
+
+def render_author_box(article: dict[str, Any]) -> str:
+    byline = (article.get("byline") or "Staff").strip()
+    bio = byline_bio(byline)
+    dateline = (article.get("dateline") or "").strip()
+    loc = f" · {escape(dateline)}" if dateline else ""
+    return f"""
+<aside class="author-box" aria-label="About the author">
+  <p class="author-box-label">Filed by</p>
+  <p class="author-box-name">{escape(byline)}{loc}</p>
+  <p class="author-box-bio">{escape(bio)}</p>
+</aside>"""
+
+
+def render_article_share(article: dict[str, Any], depth: int) -> str:
+    url = f"https://{DOMAIN}/article/{article.get('slug')}/"
+    title = quote(article.get("title") or "")
+    mail_subject = quote(article.get("title") or "Story from The Associated Guess")
+    mail_body = quote(url)
+    return f"""
+<div class="article-share" aria-label="Share this story">
+  <span class="article-share-label">Share</span>
+  <a href="mailto:?subject={mail_subject}&amp;body={mail_body}">Email</a>
+  <a href="https://twitter.com/intent/tweet?url={quote(url)}&amp;text={title}" rel="noopener">Post</a>
+  <a href="{site_href("reprints.html", depth)}">Reprints</a>
+</div>"""
+
+
+def render_headlines_ticker(articles: list[dict[str, Any]], depth: int = 0) -> str:
+    picks = pick_homepage_featured(articles, limit=6)
+    if not picks:
+        return ""
+    items = "".join(
+        f'<a href="{article_href(a["slug"], depth)}" class="ticker-item">{escape(a["title"])}</a>'
+        for a in picks
+    )
+    return f"""
+<div class="headlines-ticker" aria-label="Latest headlines">
+  <span class="ticker-label">Latest</span>
+  <div class="ticker-track">{items}</div>
+</div>"""
+
+
+def render_home_stats(articles: list[dict[str, Any]]) -> str:
+    total = len(articles)
+    indexable = sum(1 for a in articles if a.get("indexable"))
+    updated = datetime.now().strftime("%B %d, %Y").replace(" 0", " ")
+    return (
+        f'<p class="home-publication-stats">'
+        f"<strong>{total}</strong> stories in archive · "
+        f"<strong>{indexable}</strong> full-length pieces · "
+        f"Updated {escape(updated)} · "
+        f'<a href="feed.xml">RSS</a></p>'
     )
 
 
@@ -964,8 +1174,21 @@ def chrome_head(
         )
     body_attrs = f' class="{escape(body_class)}"' if body_class else ""
     robots_meta = '  <meta name="robots" content="noindex, follow" />\n' if robots_noindex else ""
+    consent_defaults = ""
     adsense_script = ""
     if include_adsense_script:
+        consent_defaults = """  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      wait_for_update: 500
+    });
+  </script>
+"""
         adsense_script = (
             f'  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_PUBLISHER}" crossorigin="anonymous"></script>\n'
         )
@@ -981,7 +1204,7 @@ def chrome_head(
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{css}" />
-{adsense_script}</head>
+{consent_defaults}{adsense_script}</head>
 <body{body_attrs} data-site-root="{root_attr}">"""
 
 
@@ -989,19 +1212,20 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
     today = datetime.now().strftime("%A, %B %d, %Y").replace(" 0", " ")
     home = site_href("index.html", depth)
     nav_items = "".join(
-        f'<a href="{home_anchor(s.lower().replace(" ", "-"), depth, on_homepage)}" class="nav-link{" active" if s == active_section else ""}">{escape(s)}</a>'
+        f'<a href="{section_href(s, depth, on_homepage)}" class="nav-link{" active" if s == active_section else ""}">{escape(s)}</a>'
         for s in SECTIONS
     )
     return f"""
 <header class="site-header">
   <div class="utility-bar">
-    <span class="utility-date">{today}</span>
+    <span class="utility-date">{today} · {edition_line()}</span>
     <nav class="utility-links">
+      <a href="{site_href("newsroom.html", depth)}">Newsroom</a>
       <a href="{site_href("about.html", depth)}">About</a>
       <a href="{site_href("contact.html", depth)}">Contact</a>
+      <a href="{site_href("feed.xml", depth)}">RSS</a>
       <a href="{home_anchor("newsletter", depth, on_homepage)}">Newsletter</a>
       <span class="subscribe-cta" data-feature="subscription" aria-hidden="true"><a href="#">Subscribe</a></span>
-      <a href="#">Sign In</a>
     </nav>
   </div>
   <div class="masthead-row">
@@ -1009,6 +1233,7 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
     <div class="masthead-center">
       <a href="{home}" class="masthead-logo">{escape(BRAND)}</a>
       <p class="masthead-tagline">{escape(TAGLINE)}</p>
+      <p class="masthead-edition">Published by {escape(LEGAL_NAME)}</p>
     </div>
     <form class="search-box" action="{site_href("search.html", depth)}" method="get" role="search">
       <input type="search" name="q" placeholder="Search" aria-label="Search stories" autocomplete="off" />
@@ -1018,13 +1243,12 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
     {nav_items}
     <button type="button" class="nav-toggle" aria-label="Menu">☰</button>
   </nav>
-  {site_disclaimer_bar(depth)}
 </header>"""
 
 
 def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = True) -> str:
     section_links = "".join(
-        f'<li><a href="{home_anchor(s.lower().replace(" ", "-"), depth, on_homepage)}">{escape(s)}</a></li>'
+        f'<li><a href="{section_href(s, depth, on_homepage)}">{escape(s)}</a></li>'
         for s in SECTIONS
     )
     js = site_href("assets/js/paper.js", depth)
@@ -1040,6 +1264,7 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = Tr
       <p class="footer-tagline">{escape(TAGLINE)}</p>
       <p class="footer-parent">A <a href="{PARENT_SITE}" rel="noopener">{escape(LEGAL_NAME)}</a> property</p>
       <p class="footer-copy">© 2026 {escape(BRAND)} · {escape(DOMAIN)}</p>
+      <p class="footer-rss"><a href="{site_href("feed.xml", depth)}">RSS feed</a> · Tips: <a href="mailto:{TIPS_EMAIL}">{TIPS_EMAIL}</a></p>
     </div>
     <div>
       <h4>Sections</h4>
@@ -1048,9 +1273,11 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = Tr
     <div>
       <h4>Company</h4>
       <ul>
+        <li><a href="{site_href("newsroom.html", depth)}">Newsroom</a></li>
         <li><a href="{site_href("about.html", depth)}">About</a></li>
         <li><a href="{site_href("editorial-standards.html", depth)}">Editorial standards</a></li>
         <li><a href="{site_href("corrections.html", depth)}">Corrections</a></li>
+        <li><a href="{site_href("reprints.html", depth)}">Reprints</a></li>
         <li><a href="{site_href("contact.html", depth)}">Contact</a></li>
         <li><a href="{site_href("privacy.html", depth)}">Privacy</a></li>
         <li><a href="{site_href("terms.html", depth)}">Terms</a></li>
@@ -1059,6 +1286,7 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = Tr
       </ul>
     </div>
   </div>
+  {footer_disclaimer(depth)}
   {footer_ad}
 </footer>
 <script type="application/json" id="house-ads-data">{house_ads_catalog_json()}</script>
@@ -1262,9 +1490,15 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
         if not sec_articles:
             continue
         cards = "".join(render_card(a, depth=0) for a in sec_articles)
-        sid = section.lower().replace(" ", "-")
+        sid = section_slug(section)
+        intro = SECTION_INTROS.get(section, "")
+        view_all = site_href(f"section/{sid}.html", 0)
         section_blocks.append(
-            f'<section class="section-rail" id="{sid}"><h2 class="section-title">{escape(section)}</h2><div class="card-grid">{cards}</div></section>'
+            f'<section class="section-rail" id="{sid}">'
+            f'<div class="section-rail-header"><h2 class="section-title">{escape(section)}</h2>'
+            f'<a class="section-view-all" href="{view_all}">View all {escape(section)} →</a></div>'
+            f'<p class="section-rail-intro">{escape(intro)}</p>'
+            f'<div class="card-grid">{cards}</div></section>'
         )
     opinion = [a for a in articles if a["section"] == "Opinion"][:4]
     investigations = [a for a in articles if "invest" in a["title"].lower() or a["section"] == "Strange America"][:4]
@@ -1287,13 +1521,12 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
             json_ld=org_json_ld(),
         )
         + chrome_header(on_homepage=True)
+        + render_headlines_ticker(articles)
         + f"""
 <main class="page-home">
   <div class="home-top">
     <div class="home-main">
-      <section class="editorial-trust" aria-label="About this publication">
-        <p><strong>{escape(BRAND)}</strong> is an original parody news site — fictional stories written like wire copy for entertainment. We publish daily, label partner announcements clearly, and maintain <a href="editorial-standards.html">editorial standards</a>, a <a href="corrections.html">corrections policy</a>, and real contact information. Nothing here is factual reporting unless the story says so.</p>
-      </section>
+      {render_home_stats(articles)}
       {house_ad_markup(0, home_page_key(), "page-top")}
       {render_featured_section(articles)}
       <section class="secondary-grid">
@@ -1353,6 +1586,16 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
     )
 
 
+def article_tips_cta_markup(depth: int = 2) -> str:
+    return f"""
+<section class="article-tips-cta" aria-label="Submit a news tip">
+  <h2 class="tips-cta-heading">Have a tip?</h2>
+  <p>Story ideas, local absurdity, and corrections belong in the newsroom — not in the comments section we also do not have.</p>
+  <p>Email <a href="mailto:{TIPS_EMAIL}">{TIPS_EMAIL}</a> or read our <a href="{site_href("editorial-standards.html", depth)}">editorial standards</a>.</p>
+</section>
+"""
+
+
 def article_disclaimer_markup(article: dict[str, Any]) -> str:
     if (article.get("kind") or "").strip().lower() == "real":
         return (
@@ -1380,6 +1623,9 @@ def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, 
         a for a in right_related if a["slug"] not in {x["slug"] for x in left_related}
     ]
     section_label = article.get("section") or "News"
+    dateline_bit = ""
+    if (article.get("dateline") or "").strip():
+        dateline_bit = f" · {escape(article['dateline'])}"
     return (
         chrome_head(
             article["title"],
@@ -1390,6 +1636,7 @@ def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, 
             og_image=article["hero_image"],
             og_type="article",
             robots_noindex=not article.get("indexable", True),
+            json_ld=article_json_ld(article),
         )
         + chrome_header(article["section"], depth, on_homepage=False)
         + f"""
@@ -1397,24 +1644,30 @@ def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, 
   <div class="article-layout">
     {render_related_rail(left_related, depth, f"More in {section_label}", "article-rail-left")}
     <div class="article-main">
+      {render_article_breadcrumb(article, depth)}
       {header_ad_markup()}
       {article_house_ad_top(article)}
       <article class="full-article">
         <p class="story-kicker">{escape(article['section'].upper())}</p>
         <h1 class="article-title">{escape(article['title'])}</h1>
         <p class="article-dek">{escape(article['dek'])}</p>
-        <p class="article-meta">By {escape(article['byline'])} · {escape(article['display_date_long'])} · {article['read_minutes']} min read</p>
+        <p class="article-meta">By {escape(article['byline'])} · {escape(article['display_date_long'])}{dateline_bit} · {article['read_minutes']} min read</p>
+        {render_article_share(article, depth)}
         {article_quick_links_markup(article)}
         <figure class="{article_hero_class(article)}">
           <img src="{escape(article['hero_image'])}" alt="" />
         </figure>
         {in_content_ad}
         <div class="article-body">
-          {article_disclaimer_markup(article)}
           {article['body_html']}
           {promo_footer(article)}
         </div>
-        <p class="article-satire-note">The Associated Guess publishes fictional parody unless a story is labeled as a partner announcement. <a href="{site_href("editorial-standards.html", depth)}">Editorial standards</a></p>
+        {render_author_box(article)}
+        {article_tips_cta_markup(depth)}
+        <div class="article-footer-notes">
+          {article_disclaimer_markup(article)}
+          <p class="article-satire-note">See <a href="{site_href("about.html", depth)}">About</a>, <a href="{site_href("corrections.html", depth)}">Corrections</a>, and <a href="{site_href("editorial-standards.html", depth)}">Editorial standards</a>.</p>
+        </div>
         <p class="back-link"><a href="{site_href("index.html", depth)}">← Back to front page</a></p>
       </article>
       {article_house_ad_bottom(article)}
@@ -1488,6 +1741,20 @@ def write_static_pages() -> None:
             f"How to request corrections on {BRAND}.",
             "corrections.html",
         ),
+        (
+            "newsroom.html",
+            "Newsroom",
+            NEWSROOM_HTML,
+            f"Editorial team and standards at {BRAND}.",
+            "newsroom.html",
+        ),
+        (
+            "reprints.html",
+            "Reprints & Permissions",
+            REPRINTS_HTML,
+            f"Syndication and reprint policy for {BRAND}.",
+            "reprints.html",
+        ),
     ]
     for name, title, body, description, canonical in pages:
         path = SITE / name
@@ -1533,6 +1800,84 @@ def write_static_pages() -> None:
     )
 
 
+def write_section_pages(articles: list[dict[str, Any]]) -> None:
+    section_dir = SITE / "section"
+    section_dir.mkdir(parents=True, exist_ok=True)
+    for section in SECTIONS:
+        slug = section_slug(section)
+        sec_articles = [a for a in articles if a.get("section") == section]
+        intro = SECTION_INTROS.get(section, "")
+        cards = "".join(render_card(a, "medium", depth=1) for a in sec_articles[:24])
+        archive_rows = []
+        for a in sec_articles[24:]:
+            url = article_href(a["slug"], depth=1)
+            archive_rows.append(
+                f'<li><a href="{url}">{escape(a["title"])}</a> '
+                f'<span class="archive-meta">{escape(a["display_date_long"])}</span></li>'
+            )
+        archive_html = ""
+        if archive_rows:
+            archive_html = (
+                f'<section class="section-archive-more"><h2>Earlier in {escape(section)}</h2>'
+                f'<ul>{"".join(archive_rows)}</ul></section>'
+            )
+        body = f"""
+<p class="section-page-intro">{escape(intro)}</p>
+<p class="section-page-count"><strong>{len(sec_articles)}</strong> stories in this section.</p>
+<div class="card-grid section-page-grid">{cards or "<p>No stories filed in this section yet.</p>"}</div>
+{archive_html}
+"""
+        path = section_dir / f"{slug}.html"
+        path.write_text(
+            chrome_head(
+                section,
+                depth=1,
+                description=f"{section} coverage from {BRAND} — original parody news.",
+                canonical_path=f"section/{slug}.html",
+                body_class="page-section",
+            )
+            + chrome_header(section, depth=1, on_homepage=False)
+            + f"<main class='page-section'>{header_ad_markup()}<h1>{escape(section)}</h1>{body}</main>"
+            + chrome_footer(depth=1, on_homepage=False),
+            encoding="utf-8",
+        )
+
+
+def write_rss_feed(articles: list[dict[str, Any]]) -> None:
+    indexable = [a for a in articles if a.get("indexable")]
+    indexable.sort(key=lambda a: a.get("display_date") or "", reverse=True)
+    items_xml: list[str] = []
+    for article in indexable[:30]:
+        slug = article.get("slug") or ""
+        link = f"https://{DOMAIN}/article/{slug}/"
+        pub = article.get("display_date") or ""
+        desc = escape(article.get("dek") or "")
+        title = escape(article.get("title") or "")
+        items_xml.append(
+            f"    <item>\n"
+            f"      <title>{title}</title>\n"
+            f"      <link>{link}</link>\n"
+            f"      <guid isPermaLink=\"true\">{link}</guid>\n"
+            f"      <pubDate>{pub}</pubDate>\n"
+            f"      <description>{desc}</description>\n"
+            f"    </item>"
+        )
+    updated = datetime.now(UTC).strftime("%a, %d %b %Y %H:%M:%S +0000")
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<rss version="2.0">\n'
+        "  <channel>\n"
+        f"    <title>{escape(BRAND)}</title>\n"
+        f"    <link>https://{DOMAIN}/</link>\n"
+        f"    <description>Original parody news from {escape(BRAND)}.</description>\n"
+        f"    <lastBuildDate>{updated}</lastBuildDate>\n"
+        f"    <managingEditor>{CONTACT_EMAIL} ({BRAND})</managingEditor>\n"
+        + "\n".join(items_xml)
+        + "\n  </channel>\n</rss>\n"
+    )
+    (SITE / "feed.xml").write_text(xml, encoding="utf-8")
+
+
 def write_robots_txt() -> None:
     (SITE / "robots.txt").write_text(
         f"User-agent: *\nAllow: /\n\nSitemap: https://{DOMAIN}/sitemap.xml\n",
@@ -1547,10 +1892,15 @@ def write_sitemap(articles: list[dict[str, Any]]) -> None:
         f"https://{DOMAIN}/contact.html",
         f"https://{DOMAIN}/editorial-standards.html",
         f"https://{DOMAIN}/corrections.html",
+        f"https://{DOMAIN}/newsroom.html",
+        f"https://{DOMAIN}/reprints.html",
         f"https://{DOMAIN}/privacy.html",
         f"https://{DOMAIN}/terms.html",
         f"https://{DOMAIN}/search.html",
+        f"https://{DOMAIN}/feed.xml",
     ]
+    for section in SECTIONS:
+        urls.append(f"https://{DOMAIN}/section/{section_slug(section)}.html")
     for article in articles:
         if not article.get("indexable", True):
             continue
@@ -1628,6 +1978,8 @@ def build_site(
     (SITE / "index.html").write_text(generate_index(ingested), encoding="utf-8")
     (SITE / "CNAME").write_text(f"{DOMAIN}\n", encoding="utf-8")
     write_static_pages()
+    write_section_pages(ingested)
+    write_rss_feed(ingested)
     write_robots_txt()
     write_sitemap(ingested)
     for article in ingested:
