@@ -4,8 +4,15 @@
     <title>The Associated Guess</title>
     <link>https://theassociatedguess.com/</link>
     <description>Original parody news from The Associated Guess.</description>
-    <lastBuildDate>Fri, 18 Sep 2026 18:25:45 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 18 Sep 2026 21:26:44 +0000</lastBuildDate>
     <managingEditor>laughingdragonsproductions@gmail.com (The Associated Guess)</managingEditor>
+    <item>
+      <title>Dow Jones Industrial Average Surges After Congress Passes Zombie Bond Bill</title>
+      <link>https://theassociatedguess.com/article/dow-jones-industrial-average-surges-after-congress-passes-zo/</link>
+      <guid isPermaLink="true">https://theassociatedguess.com/article/dow-jones-industrial-average-surges-after-congress-passes-zo/</guid>
+      <pubDate>2026-09-18</pubDate>
+      <description>Stocks climb as undead investors flood Wall Street with cash.</description>
+    </item>
     <item>
       <title>Louder Than Life 2026 Arrives With a New Companion Site Built by Lit Printz and Laughing Dragons Productions</title>
       <link>https://theassociatedguess.com/article/louder-than-life-litprintz-laughing-dragons-launch-ltl26/</link>
@@ -208,13 +215,6 @@
       <guid isPermaLink="true">https://theassociatedguess.com/article/man-discovers-gym-membership-works-better-as-guilt-subscription/</guid>
       <pubDate>2026-08-19</pubDate>
       <description>Annual fee provides &#x27;ambient fitness energy&#x27; without requiring visit.</description>
-    </item>
-    <item>
-      <title>Board Game Cafe Bans Players Who Explain Rules Unsolicited</title>
-      <link>https://theassociatedguess.com/article/board-game-cafe-bans-players-who-explain-rules-unsolicited/</link>
-      <guid isPermaLink="true">https://theassociatedguess.com/article/board-game-cafe-bans-players-who-explain-rules-unsolicited/</guid>
-      <pubDate>2026-08-19</pubDate>
-      <description>Zero tolerance for &#x27;actually&#x27; before second beer.</description>
     </item>
   </channel>
 </rss>
