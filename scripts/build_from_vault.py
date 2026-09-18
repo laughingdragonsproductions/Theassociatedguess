@@ -1198,7 +1198,6 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
 <main class="page-home">
   <div class="home-top">
     <div class="home-main">
-      {header_ad_markup()}
       {house_ad_markup(0, home_page_key(), "page-top")}
       {render_featured_section(articles)}
       <section class="secondary-grid">
