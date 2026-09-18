@@ -920,7 +920,7 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
     <div class="weather-widget">72°F · Partly Absurd · Millfield</div>
     <div class="masthead-center">
       <a href="{home}" class="masthead-logo" aria-label="{escape(BRAND)}">
-        <img src="{site_href(LOGO_PATH, depth)}" alt="{escape(BRAND)}" class="masthead-logo-img" width="420" height="120" />
+        <img src="{site_href(LOGO_PATH, depth)}" alt="{escape(BRAND)}" class="masthead-logo-img" width="260" height="68" />
       </a>
     </div>
     <form class="search-box" action="{site_href("search.html", depth)}" method="get" role="search">
