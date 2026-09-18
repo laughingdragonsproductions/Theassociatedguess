@@ -37,6 +37,8 @@ BACKLOG = ARTICLES_DIR / "Backlog"
 MANIFEST_PATH = STORIES_USED / "manifest.json"
 DATE_FOLDER_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SKIP_NAME_PARTS = ("example-article", "manifest.json", "satire-article")
+PLACEHOLDER_SLUG_RE = re.compile(r"^article-\d+$", re.I)
+MIN_INDEXABLE_WORDS = 200
 SECTIONS = [
     "News",
     "Politics",
@@ -74,6 +76,8 @@ ABOUT_HTML = """
     <li><a href="{parent}/contact/" rel="noopener">Studio contact form</a>  -  general inquiries across the portfolio</li>
   </ul>
   <p>Publisher email: <a href="mailto:{email}">{email}</a></p>
+  <h2>Editorial standards</h2>
+  <p>We maintain written standards for how stories are labeled, corrected, and kept clearly separate from factual reporting. Read our <a href="editorial-standards.html">Editorial Standards</a> and <a href="corrections.html">Corrections</a> pages before sharing or citing anything from this site.</p>
 </section>
 """.format(
     legal=LEGAL_NAME,
@@ -107,7 +111,7 @@ Studio hub: <a href="{parent}" rel="noopener">{parent_host}</a></p>
 )
 
 PRIVACY_HTML = """
-<p><strong>Last updated:</strong> August 22, 2026</p>
+<p><strong>Last updated:</strong> September 18, 2026</p>
 <p><strong>The Associated Guess</strong> is published by <strong>{legal}</strong> ("we," "us") at {domain}. This policy describes how we handle information when you visit the site. Our umbrella studio site is <a href="{parent}" rel="noopener">laughing-dragons.com</a>.</p>
 <h2>Information we collect</h2>
 <ul>
@@ -136,8 +140,60 @@ PRIVACY_HTML = """
     email=CONTACT_EMAIL,
 )
 
+EDITORIAL_STANDARDS_HTML = """
+<p><strong>Last updated:</strong> September 18, 2026</p>
+<p><strong>The Associated Guess</strong> is an original parody news publication. We write fictional stories in a straight news format for entertainment. Our goal is craft and clarity, not confusion: readers should always be able to tell this is a humor publication operated by a real studio with real contact information.</p>
+<h2>What we publish</h2>
+<ul>
+  <li><strong>Original fictional news stories</strong> written in deadpan wire-service style.</li>
+  <li><strong>Occasional partner announcements</strong> clearly labeled in copy when a portfolio brand (games, maker files, events) has a real launch worth pointing readers to.</li>
+  <li><strong>Archive and section pages</strong> that organize stories by topic for browsing and search.</li>
+</ul>
+<h2>What we do not publish</h2>
+<ul>
+  <li>Scraped or copied articles from other outlets.</li>
+  <li>AI-generated filler pages with no editorial review.</li>
+  <li>Misleading headlines intended to pass as verified breaking news on other platforms.</li>
+  <li>Doorway pages, keyword stubs, or empty templates indexed for search.</li>
+</ul>
+<h2>Labeling and reader trust</h2>
+<p>Every story page includes a visible note that the piece is fictional. The site header repeats that this is a parody publication. Partner or portfolio pieces that describe real products, events, or URLs are written as editorial announcements, not as anonymous wire copy.</p>
+<p>If you arrived here from search or social media: <strong>nothing on this site should be treated as factual reporting unless it is explicitly labeled as a partner announcement with verifiable outbound links.</strong></p>
+<h2>Editorial process</h2>
+<p>Stories are edited for headline clarity, dateline structure, and at least one on-the-record quote in the body. We remove internal production notes, agent workflow text, and draft placeholders before publication. Thin placeholder drafts are not indexed for search.</p>
+<h2>Corrections</h2>
+<p>Errors in attribution, broken links, or unclear labeling should be reported to <a href="mailto:{tips}">{tips}</a>. See our <a href="corrections.html">Corrections</a> page for how we handle updates.</p>
+<h2>Contact</h2>
+<p>Publisher: <strong>{legal}</strong> · <a href="mailto:{email}">{email}</a> · <a href="contact.html">Contact page</a></p>
+""".format(
+    legal=LEGAL_NAME,
+    tips=TIPS_EMAIL,
+    email=CONTACT_EMAIL,
+)
+
+CORRECTIONS_HTML = """
+<p><strong>Last updated:</strong> September 18, 2026</p>
+<p><strong>The Associated Guess</strong> publishes fictional parody. When we get something wrong in labeling, attribution, or site copy, we fix it promptly.</p>
+<h2>What to report</h2>
+<ul>
+  <li>A story that could be mistaken for real news off-site (missing disclaimer, misleading share card).</li>
+  <li>Broken links, wrong bylines, or duplicate pages.</li>
+  <li>Partner announcements with outdated dates or URLs.</li>
+  <li>Privacy, advertising, or rights questions.</li>
+</ul>
+<h2>How to request a correction</h2>
+<p>Email <a href="mailto:{tips}">{tips}</a> with the story URL, what is wrong, and what you believe is correct. We aim to acknowledge within a few business days.</p>
+<h2>What we will do</h2>
+<ul>
+  <li>Fix typos, broken links, and labeling on the live page.</li>
+  <li>Clarify disclaimers if a piece is being shared out of context.</li>
+  <li>Remove or noindex draft-quality pages that should not have been published.</li>
+</ul>
+<p>We do not “correct” fictional plot points in satire pieces — the story is invented. We do correct anything that affects reader trust or site integrity.</p>
+""".format(tips=TIPS_EMAIL)
+
 TERMS_HTML = """
-<p><strong>Last updated:</strong> August 22, 2026</p>
+<p><strong>Last updated:</strong> September 18, 2026</p>
 <p><strong>The Associated Guess</strong> ({domain}) is a satirical news publication operated by <strong>{legal}</strong>. Stories are fictional parody and should not be read as factual reporting.</p>
 <h2>Use of the site</h2>
 <p>You may read and share links to our articles for personal, non-commercial use. Do not scrape, republish full articles, or misrepresent satire as real news.</p>
@@ -507,14 +563,16 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
     slug = slug_from_path(path)
     if not title or len(body) < 80:
         return None
+    if PLACEHOLDER_SLUG_RE.match(slug):
+        return None
     if is_junk_article(title, body, slug):
         return None
     placeholder = is_legacy_placeholder(path, title, meta)
     if placeholder:
         title = headline_from_body(body)
     aid = article_id(meta, path)
-    words = len(re.findall(r"\w+", body))
-    read_minutes = max(1, round(words / 200))
+    word_count = len(re.findall(r"\w+", body))
+    read_minutes = max(1, round(word_count / 200))
     section = normalize_section(meta.get("section") or meta.get("category") or "News")
     dek_raw = normalize_dashes((meta.get("dek") or "").strip())
     if not dek_raw or placeholder or PLACEHOLDER_TITLE_RE.match(dek_raw) or dek_raw == title:
@@ -547,6 +605,8 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
         "body": body,
         "body_html": body_to_html(body),
         "read_minutes": read_minutes,
+        "word_count": word_count,
+        "indexable": word_count >= MIN_INDEXABLE_WORDS,
         "source_path": str(path),
         "hero_image": hero_image,
         "thumb_image": thumb_image,
@@ -849,6 +909,31 @@ def social_meta_tags(
     return "\n".join(tags) + "\n"
 
 
+def site_disclaimer_bar(depth: int = 0) -> str:
+    return f"""
+<div class="site-disclaimer" role="note">
+  <p><strong>Parody publication.</strong> {escape(BRAND)} publishes original fictional news for entertainment — not factual reporting. Partner announcements are labeled in the story. <a href="{site_href("about.html", depth)}">About</a> · <a href="{site_href("editorial-standards.html", depth)}">Editorial standards</a> · <a href="{site_href("corrections.html", depth)}">Corrections</a></p>
+</div>"""
+
+
+def org_json_ld() -> str:
+    payload = {
+        "@context": "https://schema.org",
+        "@type": "NewsMediaOrganization",
+        "name": BRAND,
+        "url": f"https://{DOMAIN}/",
+        "description": "Original parody news publication operated by Laughing Dragons Productions.",
+        "email": CONTACT_EMAIL,
+        "sameAs": [PARENT_SITE],
+        "publishingPrinciples": f"https://{DOMAIN}/editorial-standards.html",
+    }
+    return (
+        '<script type="application/ld+json">'
+        + json.dumps(payload, ensure_ascii=False)
+        + "</script>"
+    )
+
+
 def chrome_head(
     page_title: str,
     depth: int = 0,
@@ -858,6 +943,8 @@ def chrome_head(
     og_image: str = "",
     og_type: str = "website",
     include_adsense_script: bool = True,
+    robots_noindex: bool = False,
+    json_ld: str = "",
 ) -> str:
     title = escape(page_title)
     meta_desc = escape(description or TAGLINE)
@@ -876,19 +963,21 @@ def chrome_head(
             og_type=og_type,
         )
     body_attrs = f' class="{escape(body_class)}"' if body_class else ""
+    robots_meta = '  <meta name="robots" content="noindex, follow" />\n' if robots_noindex else ""
     adsense_script = ""
     if include_adsense_script:
         adsense_script = (
             f'  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={ADSENSE_PUBLISHER}" crossorigin="anonymous"></script>\n'
         )
+    json_ld_block = f"{json_ld}\n" if json_ld else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="{meta_desc}" />
-  <title>{title}  -  {escape(BRAND)}</title>
-{canonical}{social}  <link rel="preconnect" href="https://fonts.googleapis.com" />
+{robots_meta}  <title>{title}  -  {escape(BRAND)}</title>
+{canonical}{social}{json_ld_block}  <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="{css}" />
@@ -929,6 +1018,7 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
     {nav_items}
     <button type="button" class="nav-toggle" aria-label="Menu">☰</button>
   </nav>
+  {site_disclaimer_bar(depth)}
 </header>"""
 
 
@@ -959,6 +1049,8 @@ def chrome_footer(depth: int = 0, on_homepage: bool = False, show_ads: bool = Tr
       <h4>Company</h4>
       <ul>
         <li><a href="{site_href("about.html", depth)}">About</a></li>
+        <li><a href="{site_href("editorial-standards.html", depth)}">Editorial standards</a></li>
+        <li><a href="{site_href("corrections.html", depth)}">Corrections</a></li>
         <li><a href="{site_href("contact.html", depth)}">Contact</a></li>
         <li><a href="{site_href("privacy.html", depth)}">Privacy</a></li>
         <li><a href="{site_href("terms.html", depth)}">Terms</a></li>
@@ -1189,15 +1281,19 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
     return (
         chrome_head(
             "Home",
-            description=f"Satirical news from {BRAND}  -  published by {LEGAL_NAME}. {TAGLINE}",
+            description=f"Original parody news from {BRAND}, published by {LEGAL_NAME}. Fictional stories in a straight news format — see Editorial Standards.",
             canonical_path="",
             body_class="page-home",
+            json_ld=org_json_ld(),
         )
         + chrome_header(on_homepage=True)
         + f"""
 <main class="page-home">
   <div class="home-top">
     <div class="home-main">
+      <section class="editorial-trust" aria-label="About this publication">
+        <p><strong>{escape(BRAND)}</strong> is an original parody news site — fictional stories written like wire copy for entertainment. We publish daily, label partner announcements clearly, and maintain <a href="editorial-standards.html">editorial standards</a>, a <a href="corrections.html">corrections policy</a>, and real contact information. Nothing here is factual reporting unless the story says so.</p>
+      </section>
       {house_ad_markup(0, home_page_key(), "page-top")}
       {render_featured_section(articles)}
       <section class="secondary-grid">
@@ -1257,6 +1353,18 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
     )
 
 
+def article_disclaimer_markup(article: dict[str, Any]) -> str:
+    if (article.get("kind") or "").strip().lower() == "real":
+        return (
+            '<p class="article-disclaimer-top"><strong>Partner announcement.</strong> '
+            "This piece describes a real launch or collaboration; outbound links go to official partner sites.</p>"
+        )
+    return (
+        '<p class="article-disclaimer-top"><strong>Fictional parody.</strong> '
+        "This story is invented for entertainment and is not factual news reporting.</p>"
+    )
+
+
 def article_hero_class(article: dict[str, Any]) -> str:
     prompt = (article.get("image_prompt") or "").strip()
     if prompt.startswith("http://") or prompt.startswith("https://"):
@@ -1281,6 +1389,7 @@ def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, 
             body_class="page-article",
             og_image=article["hero_image"],
             og_type="article",
+            robots_noindex=not article.get("indexable", True),
         )
         + chrome_header(article["section"], depth, on_homepage=False)
         + f"""
@@ -1301,10 +1410,11 @@ def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, 
         </figure>
         {in_content_ad}
         <div class="article-body">
+          {article_disclaimer_markup(article)}
           {article['body_html']}
           {promo_footer(article)}
         </div>
-        <p class="article-satire-note">Satirical fiction from The Associated Guess. Not factual reporting.</p>
+        <p class="article-satire-note">The Associated Guess publishes fictional parody unless a story is labeled as a partner announcement. <a href="{site_href("editorial-standards.html", depth)}">Editorial standards</a></p>
         <p class="back-link"><a href="{site_href("index.html", depth)}">← Back to front page</a></p>
       </article>
       {article_house_ad_bottom(article)}
@@ -1364,10 +1474,24 @@ def write_static_pages() -> None:
             f"Terms of service for {BRAND} satirical news.",
             "terms.html",
         ),
+        (
+            "editorial-standards.html",
+            "Editorial Standards",
+            EDITORIAL_STANDARDS_HTML,
+            f"Editorial standards for {BRAND} — parody labeling, original fiction, and reader trust.",
+            "editorial-standards.html",
+        ),
+        (
+            "corrections.html",
+            "Corrections",
+            CORRECTIONS_HTML,
+            f"How to request corrections on {BRAND}.",
+            "corrections.html",
+        ),
     ]
     for name, title, body, description, canonical in pages:
         path = SITE / name
-        show_ads = name not in {"privacy.html", "terms.html"}
+        show_ads = name not in {"privacy.html", "terms.html", "editorial-standards.html", "corrections.html"}
         page_slug = name.replace(".html", "")
         footer_promo = (
             house_ad_markup(0, page_slug, "page-bottom") if show_ads else ""
@@ -1421,11 +1545,15 @@ def write_sitemap(articles: list[dict[str, Any]]) -> None:
         f"https://{DOMAIN}/",
         f"https://{DOMAIN}/about.html",
         f"https://{DOMAIN}/contact.html",
+        f"https://{DOMAIN}/editorial-standards.html",
+        f"https://{DOMAIN}/corrections.html",
         f"https://{DOMAIN}/privacy.html",
         f"https://{DOMAIN}/terms.html",
         f"https://{DOMAIN}/search.html",
     ]
     for article in articles:
+        if not article.get("indexable", True):
+            continue
         urls.append(f"https://{DOMAIN}/article/{article['slug']}/")
     body = '<?xml version="1.0" encoding="UTF-8"?>\n'
     body += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
