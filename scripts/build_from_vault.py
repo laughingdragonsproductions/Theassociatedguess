@@ -461,6 +461,8 @@ def find_pending_date_folder_articles() -> list[Path]:
         for path in sorted(child.glob("*.md")):
             if is_excluded_path(path):
                 continue
+            if not is_publishable_vault_article(path):
+                continue
             pending.append((child.name, path.name.lower(), path))
     pending.sort(key=lambda row: (row[0], row[1]))
     return [path for _, _, path in pending]
@@ -473,7 +475,7 @@ def find_today_trending_publish_candidate(live_date: date | None = None) -> Path
     if not today_dir.is_dir():
         return None
     for path in sorted(today_dir.glob("*.md")):
-        if is_excluded_path(path):
+        if is_excluded_path(path) or not is_publishable_vault_article(path):
             continue
         try:
             meta = parse_frontmatter(path.read_text(encoding="utf-8"))
