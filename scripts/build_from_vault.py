@@ -48,7 +48,8 @@ SECTIONS = [
     "Strange America",
 ]
 BRAND = "The Associated Guess"
-TAGLINE = "SERIOUS NEWS. ABSURD WORLD."
+TAGLINE = "NEWS WORTH A CLOSER LOOK"
+LOGO_PATH = "assets/images/tag-logo.png"
 DOMAIN = "theassociatedguess.com"
 ADSENSE_PUBLISHER = "ca-pub-7048606415692002"
 CONTACT_EMAIL = "laughingdragonsproductions@gmail.com"
@@ -918,8 +919,9 @@ def chrome_header(active_section: str = "", depth: int = 0, on_homepage: bool = 
   <div class="masthead-row">
     <div class="weather-widget">72°F · Partly Absurd · Millfield</div>
     <div class="masthead-center">
-      <a href="{home}" class="masthead-logo">{escape(BRAND)}</a>
-      <p class="masthead-tagline">{escape(TAGLINE)}</p>
+      <a href="{home}" class="masthead-logo" aria-label="{escape(BRAND)}">
+        <img src="{site_href(LOGO_PATH, depth)}" alt="{escape(BRAND)}" class="masthead-logo-img" width="420" height="120" />
+      </a>
     </div>
     <form class="search-box" action="{site_href("search.html", depth)}" method="get" role="search">
       <input type="search" name="q" placeholder="Search" aria-label="Search stories" autocomplete="off" />
