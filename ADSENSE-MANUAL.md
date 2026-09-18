@@ -9,8 +9,8 @@ State file: `G:\openclaw\business\jarvis\state\adsense-readiness.json`
 
 | Milestone | Actions | TAG scored rows |
 |-----------|---------|-----------------|
-| **Now (code shipped)** | Satire footer + conditional script on legal/search | **93%** (28/30) — C9 + LV6 Done |
-| **After console §1–3** | Slot IDs + EU CMP | **100%** (30/30) |
+| **Code shipped (Sep 18)** | 63 indexable, section pages, newsroom, RSS, consent defaults | **100%** scanner |
+| **After console §0–§3** | Auto ads off + EU CMP publish + Sites review | **Matrix 99%+** |
 | **Full board** | + Sites review (A3) + Search Console (T7) + LV8 spot-check | 33/33 Done |
 
 ---
@@ -25,7 +25,7 @@ State file: `G:\openclaw\business\jarvis\state\adsense-readiness.json`
 | About page | **Ready** | `/about.html` — editorial voice + **Laughing Dragons Productions** publisher block |
 | Contact | **Ready** | `/contact.html` — tips + studio email + link to laughing-dragons.com/contact/ |
 | Footer legal links | **Ready** | Privacy, Terms, About, Contact |
-| Original content | **Ready** | 78 satire articles, daily vault pipeline, per-article satire footer |
+| Original content | **Ready** | 81 articles, 63+ indexable (≥75%), ON008 pipeline, footer disclaimer |
 | Publisher script scope | **Ready** | `adsbygoogle.js` on editorial/article pages only; **omitted** on privacy, terms, search |
 | Legal pages ad-free | **Ready** | No ad slots and no `adsense.js` on privacy, terms, or search |
 | robots + sitemap | **Ready** | `/robots.txt`, `/sitemap.xml` |
@@ -155,24 +155,24 @@ Live: https://theassociatedguess.com
 
 ## Review-ready checklist
 
-**Code-side (Dave) — done:**
+**Code-side — done (Sep 18 push):**
 
 - [x] ads.txt + publisher script on monetized pages
-- [x] Privacy/terms/about/contact
-- [x] Empty-slot-safe `adsense.js`
+- [x] Privacy/terms/about/contact/newsroom/reprints
+- [x] Empty-slot-safe `adsense.js` + Consent Mode defaults in `<head>`
 - [x] No ads and no `adsbygoogle.js` on legal/search pages
-- [x] 78 articles + sitemap
-- [x] Per-article satire disclaimer footer
-- [x] Dolly redirect stubs excluded from sitemap
+- [x] 81 articles, 63+ indexable, sitemap + RSS + 8 section pages
+- [x] Disclaimer in footer (not header); article notes at bottom
+- [x] Slot IDs in `config.js` (header, inContent, footer)
 
-**Console-side (Brandon) — pending:**
+**Console-side (Brandon) — do after push:**
 
 - [ ] §0 Disable Auto ads
-- [ ] §1 Create TAG display ad units + fill `config.js` + push
-- [ ] §2 Enable EU CMP
+- [x] §1 Slot IDs in config.js (push to live)
+- [ ] §2 Enable EU CMP in AdSense (links to privacy.html)
 - [ ] §3 Add site in AdSense → Sites → request review
-- [ ] §4 (Optional) Search Console verify + submit sitemap
-- [ ] §5 (After go-live) Spot-check content/ad ratio for LV8
+- [ ] §4 Search Console verify + submit sitemap
+- [ ] §5 Spot-check content/ad ratio for LV8
 
 **Pre-review verification:**
 
