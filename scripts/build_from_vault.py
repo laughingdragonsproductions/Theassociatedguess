@@ -554,6 +554,7 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
         "published": (meta.get("published") or "").strip(),
         "featured": parse_frontmatter_flag(meta.get("featured")),
         "trending": parse_frontmatter_flag(meta.get("trending")),
+        "quick_links": parse_quick_links(meta.get("quick_links") or ""),
         "_num_id": numeric_id(aid),
     }
 
@@ -765,6 +766,41 @@ def assign_display_dates(articles: list[dict[str, Any]]) -> None:
 
 def format_long_date(d: date) -> str:
     return d.strftime("%A, %B %d, %Y").replace(" 0", " ")
+
+
+def parse_quick_links(raw: str) -> list[tuple[str, str]]:
+    """Parse frontmatter quick_links: 'Label|url;Label|url'."""
+    links: list[tuple[str, str]] = []
+    for chunk in (raw or "").split(";"):
+        chunk = chunk.strip()
+        if not chunk or "|" not in chunk:
+            continue
+        label, url = chunk.split("|", 1)
+        label = label.strip()
+        url = url.strip()
+        if label and url.startswith(("http://", "https://")):
+            links.append((label, url))
+    return links
+
+
+def article_quick_links_markup(article: dict[str, Any]) -> str:
+    links = article.get("quick_links") or []
+    if not links:
+        return ""
+    items = []
+    for index, (label, url) in enumerate(links):
+        cls = "article-quick-link"
+        if index == 0:
+            cls += " article-quick-link-primary"
+        items.append(
+            f'<a class="{cls}" href="{escape(url)}" rel="noopener">{escape(label)}</a>'
+        )
+    return (
+        '<nav class="article-quick-links" aria-label="Quick links">'
+        '<p class="article-quick-links-label">Go to</p>'
+        f'<div class="article-quick-links-row">{"".join(items)}</div>'
+        "</nav>"
+    )
 
 
 def promo_footer(article: dict[str, Any]) -> str:
@@ -1260,6 +1296,7 @@ def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, 
         <h1 class="article-title">{escape(article['title'])}</h1>
         <p class="article-dek">{escape(article['dek'])}</p>
         <p class="article-meta">By {escape(article['byline'])} · {escape(article['display_date_long'])} · {article['read_minutes']} min read</p>
+        {article_quick_links_markup(article)}
         <figure class="{article_hero_class(article)}">
           <img src="{escape(article['hero_image'])}" alt="" />
         </figure>
