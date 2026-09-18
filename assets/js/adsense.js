@@ -6,6 +6,9 @@
   }
 
   function slotFormat(el) {
+    if (el.classList.contains("ad-slot-in-content")) {
+      return "autorelaxed";
+    }
     if (el.classList.contains("ad-slot-header") || el.classList.contains("ad-slot-footer")) {
       return "horizontal";
     }
@@ -38,9 +41,12 @@
     );
   }
 
-  function pushAds() {
+  function pushAds(count) {
     try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      var n = count || 1;
+      for (var i = 0; i < n; i += 1) {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
     } catch (_) {
       /* AdSense not loaded yet */
     }
@@ -66,7 +72,7 @@
       mounted += 1;
     });
     if (mounted) {
-      pushAds();
+      pushAds(mounted);
     }
   }
 
