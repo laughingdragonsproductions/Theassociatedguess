@@ -232,7 +232,7 @@ def numeric_id(article_id_str: str) -> int:
 
 def is_excluded_path(path: Path) -> bool:
     parts = {p.lower() for p in path.parts}
-    if "quarantine" in parts:
+    if "quarantine" in parts or "dont-use" in parts:
         return True
     name = path.name.lower()
     if name == "manifest.json":
@@ -255,7 +255,7 @@ def collect_vault_paths(*, include_date_folders: bool = False) -> list[Path]:
         for child in sorted(ARTICLES_DIR.iterdir()):
             if not child.is_dir():
                 continue
-            if child.name in ("Stories-Used", "quarantine"):
+            if child.name in ("Stories-Used", "quarantine", "Dont-Use"):
                 continue
             if DATE_FOLDER_RE.match(child.name):
                 paths.extend(sorted(child.glob("*.md")))
@@ -379,13 +379,14 @@ def update_frontmatter_published(path: Path, pub_date: str) -> None:
     path.write_text(f"---{fm}---{parts[2]}", encoding="utf-8")
 
 
-def publish_one_pending(live_date: date | None = None) -> dict[str, Any]:
-    """Move one vault draft to Stories-Used with today's live published date (ON004)."""
+def publish_one_from_path(src: Path, *, live_date: date | None = None, source_queue: str = "explicit") -> dict[str, Any]:
+    """Move one specific vault draft to Stories-Used with today's live published date."""
     live = live_date or datetime.now(ET).date()
     pub_str = live.isoformat()
-    src, source_queue = pick_next_publish_source(live)
-    if src is None:
-        return {"published": None, "live_date": pub_str, "reason": "no pending drafts in Backlog or date folders"}
+    if not src.is_file():
+        return {"published": None, "live_date": pub_str, "reason": f"source missing: {src}"}
+    if is_excluded_path(src) and "dont-use" not in {p.lower() for p in src.parts}:
+        return {"published": None, "live_date": pub_str, "reason": f"source excluded: {src}"}
     update_frontmatter_published(src, pub_str)
     STORIES_USED.mkdir(parents=True, exist_ok=True)
     dest = STORIES_USED / src.name
@@ -419,6 +420,16 @@ def publish_one_pending(live_date: date | None = None) -> dict[str, Any]:
     }
 
 
+def publish_one_pending(live_date: date | None = None) -> dict[str, Any]:
+    """Move one vault draft to Stories-Used with today's live published date (ON004)."""
+    live = live_date or datetime.now(ET).date()
+    pub_str = live.isoformat()
+    src, source_queue = pick_next_publish_source(live)
+    if src is None:
+        return {"published": None, "live_date": pub_str, "reason": "no pending drafts in Backlog or date folders"}
+    return publish_one_from_path(src, live_date=live, source_queue=source_queue)
+
+
 def normalize_section(raw: str) -> str:
     section = (raw or "News").strip()
     if section.lower() == "satire":
@@ -434,6 +445,41 @@ def parse_frontmatter_flag(value: Any) -> bool:
         return value
     token = str(value or "").strip().lower()
     return token in {"true", "yes", "1", "front", "breaking", "featured", "on"}
+
+
+def strip_workflow_lines(body: str) -> str:
+    """Drop internal satire-vault production notes from publishable body copy."""
+    kept: list[str] = []
+    for line in body.splitlines():
+        stripped = line.strip()
+        if WORKFLOW_LINE_RE.match(stripped):
+            continue
+        if re.match(r"^(Setup|Punchline|Scene|Beat):", stripped, re.I):
+            continue
+        kept.append(line)
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+
+
+def first_sentence(text: str) -> str:
+    para = re.sub(r"\s+", " ", text.split("\n\n")[0]).strip()
+    match = re.search(r"^(.+?[.!?])(?:\s|$)", para)
+    return match.group(1).strip() if match else para
+
+
+def headline_from_body(body: str, max_len: int = 100) -> str:
+    headline = first_sentence(body).rstrip(".!?").strip()
+    if len(headline) <= max_len:
+        return headline
+    trimmed = headline[:max_len].rsplit(" ", 1)[0]
+    return trimmed.rstrip(",;:")
+
+
+def is_legacy_placeholder(path: Path, title: str, meta: dict[str, str]) -> bool:
+    if (meta.get("title") or "").strip():
+        return False
+    if PLACEHOLDER_TITLE_RE.match(title.strip()):
+        return True
+    return bool(LEGACY_PLACEHOLDER_SLUG_RE.match(path.stem))
 
 
 def is_junk_article(title: str, body: str, slug: str) -> bool:
@@ -456,20 +502,27 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
     except OSError:
         return None
     meta = parse_frontmatter(text)
-    body = normalize_dashes(extract_body(text))
+    body = strip_workflow_lines(normalize_dashes(extract_body(text)))
     title = normalize_dashes(extract_title(meta, body, path))
     slug = slug_from_path(path)
     if not title or len(body) < 80:
         return None
     if is_junk_article(title, body, slug):
         return None
+    placeholder = is_legacy_placeholder(path, title, meta)
+    if placeholder:
+        title = headline_from_body(body)
     aid = article_id(meta, path)
     words = len(re.findall(r"\w+", body))
     read_minutes = max(1, round(words / 200))
     section = normalize_section(meta.get("section") or meta.get("category") or "News")
-    dek = normalize_dashes((meta.get("dek") or "").strip() or title[:120])
+    dek_raw = normalize_dashes((meta.get("dek") or "").strip())
+    if not dek_raw or placeholder or PLACEHOLDER_TITLE_RE.match(dek_raw) or dek_raw == title:
+        dek = first_sentence(body)[:160]
+    else:
+        dek = dek_raw
     if re.search(r"\bsatire\b", dek, re.I):
-        dek = title[:120]
+        dek = first_sentence(body)[:160]
     image_prompt = (meta.get("image_prompt") or "").strip()
     hero_image, thumb_image = pick_article_images(
         article_id=aid,
@@ -506,6 +559,10 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
 
 
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+BOLD_RE = re.compile(r"\*\*(.+?)\*\*")
+WORKFLOW_LINE_RE = re.compile(r"^\s*\*\*(Setup|Punchline|Scene|Beat):?\*\*", re.I)
+LEGACY_PLACEHOLDER_SLUG_RE = re.compile(r"^article-\d+$", re.I)
+PLACEHOLDER_TITLE_RE = re.compile(r"^article\s*\d+$", re.I)
 
 HOUSE_ADS: list[dict[str, str]] = [
     {
@@ -623,20 +680,33 @@ def house_ads_catalog_json() -> str:
     return json.dumps(HOUSE_ADS, ensure_ascii=False)
 
 
+def apply_inline_formatting(text: str) -> str:
+    parts: list[str] = []
+    last = 0
+    for match in BOLD_RE.finditer(text):
+        if match.start() > last:
+            parts.append(escape(text[last : match.start()]))
+        parts.append(f"<strong>{escape(match.group(1))}</strong>")
+        last = match.end()
+    if last < len(text):
+        parts.append(escape(text[last:]))
+    return "".join(parts) if parts else escape(text)
+
+
 def inline_markdown(text: str) -> str:
-    """Convert [label](url) to anchor tags; escape other text."""
+    """Convert [label](url) and **bold**; escape other text."""
     parts: list[str] = []
     last = 0
     for match in LINK_RE.finditer(text):
         if match.start() > last:
-            parts.append(escape(text[last : match.start()]))
+            parts.append(apply_inline_formatting(text[last : match.start()]))
         label = escape(match.group(1))
         url = html.escape(match.group(2).strip(), quote=True)
         parts.append(f'<a href="{url}" rel="noopener">{label}</a>')
         last = match.end()
     if last < len(text):
-        parts.append(escape(text[last:]))
-    return "".join(parts) if parts else escape(text)
+        parts.append(apply_inline_formatting(text[last:]))
+    return "".join(parts) if parts else apply_inline_formatting(text)
 
 
 def body_to_html(body: str) -> str:
@@ -1363,10 +1433,17 @@ def archive_used(ingested: list[dict[str, Any]]) -> int:
     return moved
 
 
-def build_site(archive: bool = False, publish_one: bool = False) -> dict[str, Any]:
+def build_site(
+    archive: bool = False,
+    publish_one: bool = False,
+    publish_path: Path | None = None,
+) -> dict[str, Any]:
     published_one: dict[str, Any] | None = None
     if publish_one:
-        published_one = publish_one_pending()
+        if publish_path is not None:
+            published_one = publish_one_from_path(publish_path, source_queue="backlog-pick")
+        else:
+            published_one = publish_one_pending()
     paths = collect_vault_paths()
     ingested: list[dict[str, Any]] = []
     for path in paths:
@@ -1423,10 +1500,22 @@ def main() -> None:
         action="store_true",
         help="Publish one pending vault draft with today's live ET date (ON004 default)",
     )
+    parser.add_argument(
+        "--publish-path",
+        type=Path,
+        default=None,
+        help="Publish this exact vault .md (used after backlog headline pick)",
+    )
     args = parser.parse_args()
     if args.archive_used and args.publish_one:
         parser.error("Use --publish-one OR --archive-used, not both")
-    result = build_site(archive=args.archive_used, publish_one=args.publish_one)
+    if args.publish_path and not args.publish_one:
+        parser.error("--publish-path requires --publish-one")
+    result = build_site(
+        archive=args.archive_used,
+        publish_one=args.publish_one,
+        publish_path=args.publish_path,
+    )
     print(json.dumps(result, indent=2))
 
 
