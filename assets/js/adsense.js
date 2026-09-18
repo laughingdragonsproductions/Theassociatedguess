@@ -5,39 +5,49 @@
     return window.SITE_CONFIG?.adsense || {};
   }
 
-  function slotFormat(el) {
-    if (el.classList.contains("ad-slot-in-content")) {
-      return "autorelaxed";
-    }
-    if (el.classList.contains("ad-slot-header") || el.classList.contains("ad-slot-footer")) {
-      return "horizontal";
-    }
-    return "auto";
-  }
-
-  function unitClass(el) {
-    if (el.classList.contains("ad-slot-header")) return "ad-unit-header";
-    if (el.classList.contains("ad-slot-footer")) return "ad-unit-footer";
-    if (el.classList.contains("ad-slot-in-content")) return "ad-unit-in-content";
-    return "ad-unit";
-  }
-
   function renderAdSlot(key, el) {
     const settings = cfg();
     const slotId = settings.slots?.[key];
     if (!settings.publisherId || !slotId) {
       return "";
     }
+
+    if (el.classList.contains("ad-slot-header")) {
+      return (
+        '<ins class="adsbygoogle ad-unit-header" style="display:block" data-ad-client="' +
+        settings.publisherId +
+        '" data-ad-slot="' +
+        slotId +
+        '" data-ad-format="auto" data-full-width-responsive="true"></ins>'
+      );
+    }
+
+    if (el.classList.contains("ad-slot-footer")) {
+      return (
+        '<ins class="adsbygoogle ad-unit-footer" style="display:inline-block;width:728px;height:90px" data-ad-client="' +
+        settings.publisherId +
+        '" data-ad-slot="' +
+        slotId +
+        '"></ins>'
+      );
+    }
+
+    if (el.classList.contains("ad-slot-in-content")) {
+      return (
+        '<ins class="adsbygoogle ad-unit-in-content" style="display:block" data-ad-client="' +
+        settings.publisherId +
+        '" data-ad-slot="' +
+        slotId +
+        '" data-ad-format="autorelaxed"></ins>'
+      );
+    }
+
     return (
-      '<ins class="adsbygoogle ' +
-      unitClass(el) +
-      '" style="display:block" data-ad-client="' +
+      '<ins class="adsbygoogle ad-unit" style="display:block" data-ad-client="' +
       settings.publisherId +
       '" data-ad-slot="' +
       slotId +
-      '" data-ad-format="' +
-      slotFormat(el) +
-      '" data-full-width-responsive="true"></ins>'
+      '" data-ad-format="auto" data-full-width-responsive="true"></ins>'
     );
   }
 
@@ -58,7 +68,7 @@
       return;
     }
     let mounted = 0;
-    document.querySelectorAll("[data-ad-slot]").forEach(function (el) {
+    document.querySelectorAll(".ad-slot[data-ad-slot]").forEach(function (el) {
       const key = el.getAttribute("data-ad-slot");
       if (!key) {
         return;

@@ -29,7 +29,7 @@ State file: `G:\openclaw\business\jarvis\state\adsense-readiness.json`
 | Publisher script scope | **Ready** | `adsbygoogle.js` on editorial/article pages only; **omitted** on privacy, terms, search |
 | Legal pages ad-free | **Ready** | No ad slots and no `adsense.js` on privacy, terms, or search |
 | robots + sitemap | **Ready** | `/robots.txt`, `/sitemap.xml` |
-| Ad units configured | **Partial** | Multiplex `7102817128` → `inContent`; paste header/footer slot IDs (§1) |
+| Ad units configured | **Ready** | Header `2936560577`, multiplex `7102817128`, footer `4852277474` in `config.js` |
 | Auto ads disabled | **You** | AdSense dashboard before manual slots go live (§0 below) |
 | EU consent (CMP) | **You** | AdSense → Privacy & messaging → European regulations (§2) |
 | Search Console | **Recommended** | Verify `theassociatedguess.com`, submit sitemap (§4) |
@@ -51,9 +51,9 @@ AdSense → **Ads** → **By ad unit** → **Display ads**
 
 | Unit name | Format | `config.js` key | Placement |
 |-----------|--------|-----------------|-----------|
+| TAG Header Banner | Display (`auto`) | `header` | `2936560577` — below nav on editorial pages |
 | TAG Multiplex | Multiplex (`autorelaxed`) | `inContent` | `7102817128` — below hero on articles |
-| TAG Header Banner | Display | `header` | Below nav on editorial pages |
-| TAG Footer Banner | Display | `footer` | Sitewide footer |
+| TAG Footer Banner | Leaderboard 728×90 | `footer` | `4852277474` — sitewide footer |
 
 Copy each **data-ad-slot** into `assets/js/config.js`:
 
@@ -61,9 +61,9 @@ Copy each **data-ad-slot** into `assets/js/config.js`:
 adsense: {
   publisherId: "ca-pub-7048606415692002",
   slots: {
-    header: "PASTE_HEADER_SLOT",
+    header: "2936560577",
     inContent: "7102817128",
-    footer: "PASTE_FOOTER_SLOT",
+    footer: "4852277474",
   },
 },
 ```

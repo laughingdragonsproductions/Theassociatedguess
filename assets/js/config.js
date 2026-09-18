@@ -16,8 +16,8 @@ window.SITE_CONFIG = {
   adsense: {
     publisherId: "ca-pub-7048606415692002",
     slots: {
-      header: "",
-      footer: "",
+      header: "2936560577",
+      footer: "4852277474",
       inContent: "7102817128",
     },
   },
