@@ -4,6 +4,7 @@
   --muted: #555;
   --rule: #d4d4d2;
   --accent: #8b0000;
+  --brand-red: #a82424;
   --bg: #e8e8e6;
   --surface: #f2f2f0;
   --featured-bg: #f6f1e8;
@@ -58,7 +59,7 @@ img {
 
 .site-header {
   border-bottom: 1px solid var(--ink);
-  background: var(--surface);
+  background: #fff;
 }
 
 .utility-bar {
@@ -96,27 +97,82 @@ img {
 
 .masthead-center {
   text-align: center;
+  justify-self: center;
 }
 
-.masthead-logo {
-  font-family: var(--serif);
-  font-size: clamp(1.8rem, 4vw, 2.75rem);
-  font-weight: 700;
-  letter-spacing: 0.02em;
+.masthead-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem 1.25rem;
+  max-width: 100%;
+}
+
+.masthead-mark {
+  flex-shrink: 0;
+  line-height: 0;
   text-decoration: none;
 }
 
-.masthead-logo:hover {
+.masthead-mark:hover {
   text-decoration: none;
+  opacity: 0.92;
+}
+
+.masthead-mark-img {
+  display: block;
+  height: auto;
+  width: auto;
+  max-height: 58px;
+  max-width: min(36vw, 150px);
+  object-fit: contain;
+}
+
+.masthead-divider {
+  width: 2px;
+  align-self: stretch;
+  min-height: 3.25rem;
+  background: var(--ink);
+  flex-shrink: 0;
+}
+
+.masthead-wordmark {
+  text-align: left;
+  min-width: 0;
+}
+
+.masthead-name {
+  display: block;
+  font-family: var(--sans);
+  font-size: clamp(0.95rem, 2vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.masthead-name:hover {
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.masthead-name .name-part {
+  color: var(--ink);
+}
+
+.masthead-name .name-red {
+  color: var(--brand-red);
 }
 
 .masthead-tagline {
-  margin: 0.25rem 0 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
+  margin: 0.35rem 0 0;
+  font-size: clamp(0.52rem, 1.2vw, 0.62rem);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--accent);
-  font-weight: 700;
+  color: var(--muted);
+  font-weight: 400;
+  text-align: center;
 }
 
 .search-box input {
@@ -896,6 +952,25 @@ img {
   .masthead-row {
     grid-template-columns: 1fr;
     text-align: center;
+  }
+
+  .masthead-brand {
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .masthead-divider {
+    width: min(70%, 12rem);
+    height: 2px;
+    min-height: 0;
+  }
+
+  .masthead-wordmark {
+    text-align: center;
+  }
+
+  .masthead-name {
+    white-space: normal;
   }
 
   .search-box input {
