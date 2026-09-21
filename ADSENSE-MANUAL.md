@@ -2,8 +2,12 @@
 
 Publisher ID: **ca-pub-7048606415692002** (shared with Laughing Dragons portfolio).
 
+**Authoritative matrix (Google-aligned):** [../laughing-dragons-site/ADSENSE-REQUIREMENTS-MATRIX.md](../laughing-dragons-site/ADSENSE-REQUIREMENTS-MATRIX.md)
+
 **Automated check:** `powershell -File G:\LocalAIagent\desktop-agent\scripts\check-adsense-readiness.ps1 -Site tag`  
 State file: `G:\openclaw\business\jarvis\state\adsense-readiness.json`
+
+> **Sep 2026 rejection:** Low value content — fix Tier B–E in the master matrix before resubmit.
 
 ## Matrix score path (Sep 2026)
 
