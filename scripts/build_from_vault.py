@@ -39,7 +39,8 @@ MANIFEST_PATH = STORIES_USED / "manifest.json"
 DATE_FOLDER_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 SKIP_NAME_PARTS = ("example-article", "manifest.json", "satire-article")
 PLACEHOLDER_SLUG_RE = re.compile(r"^article-\d+$", re.I)
-MIN_INDEXABLE_WORDS = 200
+MIN_INDEXABLE_WORDS = 300
+MIN_INDEXABLE_READ_MINUTES = 2
 SECTIONS = [
     "News",
     "Politics",
@@ -706,7 +707,8 @@ def ingest_article(path: Path) -> dict[str, Any] | None:
         "body_html": body_to_html(body),
         "read_minutes": read_minutes,
         "word_count": word_count,
-        "indexable": word_count >= MIN_INDEXABLE_WORDS,
+        "indexable": word_count >= MIN_INDEXABLE_WORDS
+        and read_minutes >= MIN_INDEXABLE_READ_MINUTES,
         "source_path": str(path),
         "hero_image": hero_image,
         "thumb_image": thumb_image,
@@ -1329,13 +1331,18 @@ def featured_priority(article: dict[str, Any], today_iso: str) -> tuple[int, int
     return (day_ord, boost, article.get("_num_id") or 0)
 
 
+def public_articles(articles: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Indexable stories only — surfaced on home, sections, archive, and RSS."""
+    return [a for a in articles if a.get("indexable") and a.get("title") and a.get("slug")]
+
+
 def pick_homepage_featured(
     articles: list[dict[str, Any]], *, limit: int = 4, today: date | None = None
 ) -> list[dict[str, Any]]:
     today = today or date.today()
     today_iso = today.isoformat()
     ranked = sorted(
-        [a for a in articles if a.get("title") and a.get("slug")],
+        public_articles(articles),
         key=lambda a: featured_priority(a, today_iso),
         reverse=True,
     )
@@ -1400,7 +1407,7 @@ def render_trending_list(articles: list[dict[str, Any]], limit: int = 5, depth: 
 
 def render_archive(articles: list[dict[str, Any]], depth: int = 0) -> str:
     by_month: dict[str, list[dict[str, Any]]] = {}
-    for a in articles:
+    for a in public_articles(articles):
         d = date.fromisoformat(a["display_date"])
         key = d.strftime("%B %Y")
         by_month.setdefault(key, []).append(a)
@@ -1449,7 +1456,11 @@ def pick_related_articles(
     *,
     per_side: int = 4,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    candidates = [a for a in all_articles if a.get("slug") and a["slug"] != current.get("slug")]
+    candidates = [
+        a
+        for a in all_articles
+        if a.get("slug") and a["slug"] != current.get("slug") and a.get("indexable")
+    ]
     ranked = sorted(candidates, key=lambda a: related_rank_key(current, a), reverse=True)
     left = ranked[:per_side]
     used = {a["slug"] for a in left}
@@ -1485,10 +1496,10 @@ def render_related_mobile(articles: list[dict[str, Any]], depth: int = 0) -> str
 def generate_index(articles: list[dict[str, Any]]) -> str:
     featured = pick_homepage_featured(articles)
     featured_slugs = {a["slug"] for a in featured}
-    secondary = [a for a in articles if a["slug"] not in featured_slugs][:4]
+    secondary = [a for a in public_articles(articles) if a["slug"] not in featured_slugs][:4]
     section_blocks = []
     for section in SECTIONS:
-        sec_articles = [a for a in articles if a["section"] == section][:5]
+        sec_articles = [a for a in public_articles(articles) if a["section"] == section][:5]
         if not sec_articles:
             continue
         cards = "".join(render_card(a, depth=0) for a in sec_articles)
@@ -1502,15 +1513,20 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
             f'<p class="section-rail-intro">{escape(intro)}</p>'
             f'<div class="card-grid">{cards}</div></section>'
         )
-    opinion = [a for a in articles if a["section"] == "Opinion"][:4]
-    investigations = [a for a in articles if "invest" in a["title"].lower() or a["section"] == "Strange America"][:4]
+    surfaced = public_articles(articles)
+    opinion = [a for a in surfaced if a["section"] == "Opinion"][:4]
+    investigations = [
+        a
+        for a in surfaced
+        if "invest" in a["title"].lower() or a["section"] == "Strange America"
+    ][:4]
     if not opinion:
-        opinion = articles[8:12]
+        opinion = surfaced[8:12]
     if not investigations:
-        investigations = articles[12:16]
+        investigations = surfaced[12:16]
 
     catalog_json = json.dumps(
-        [article_catalog_entry(a) for a in articles],
+        [article_catalog_entry(a) for a in surfaced],
         ensure_ascii=False,
     )
 
@@ -1807,7 +1823,7 @@ def write_section_pages(articles: list[dict[str, Any]]) -> None:
     section_dir.mkdir(parents=True, exist_ok=True)
     for section in SECTIONS:
         slug = section_slug(section)
-        sec_articles = [a for a in articles if a.get("section") == section]
+        sec_articles = [a for a in public_articles(articles) if a.get("section") == section]
         intro = SECTION_INTROS.get(section, "")
         cards = "".join(render_card(a, "medium", depth=1) for a in sec_articles[:24])
         archive_rows = []
