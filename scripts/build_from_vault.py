@@ -436,7 +436,12 @@ def is_publishable_vault_article(path: Path) -> bool:
     if not text.lstrip().startswith("---"):
         return False
     meta = parse_frontmatter(text)
-    return bool(str(meta.get("title") or "").strip())
+    if not str(meta.get("title") or "").strip():
+        return False
+    body = extract_body(text)
+    word_count = len(re.findall(r"\w+", body))
+    read_minutes = max(1, round(word_count / 200))
+    return word_count >= MIN_INDEXABLE_WORDS and read_minutes >= MIN_INDEXABLE_READ_MINUTES
 
 
 def find_pending_backlog_articles() -> list[Path]:
@@ -793,6 +798,7 @@ def write_article_redirects() -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\" />"
+            '<meta name="robots" content="noindex, nofollow" />'
             f"<meta http-equiv=\"refresh\" content=\"0;url={dest}\" />"
             f"<link rel=\"canonical\" href=\"{dest}\" />"
             f"<title>Redirect</title></head><body>"

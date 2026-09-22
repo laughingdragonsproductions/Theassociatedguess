@@ -74,6 +74,10 @@ VERIFIED_PHOTO_IDS: frozenset[str] = frozenset(
         "1502877338535-766e1452684a",
         "1572595980019-acecd39bb149",
         "1433952206545-f507af9b26fd",
+        "1570205440321-a4061c476c7a",
+        "1571147085592-fe1f9c5ae1a1",
+        "1729086923682-2e06130c53c1",
+        "1705593349153-0e21c38c8ff2",
     }
 )
 
@@ -144,6 +148,32 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
         "id": "election",
         "keywords": ["vote", "voting", "election", "ballot", "citizens to vote", "mandatory vote"],
         "photos": ["1554224155-6726b3ff858f"],
+    },
+    {
+        "id": "baseball",
+        "keywords": [
+            "baseball",
+            "braves",
+            "yankees",
+            "dodgers",
+            "giants",
+            "mlb",
+            "playoff",
+            "magic number",
+            "stadium",
+            "inning",
+            "bat",
+            "pitcher",
+            "home plate",
+            "walk-off",
+            "softball",
+        ],
+        "photos": [
+            "1729086923682-2e06130c53c1",
+            "1571147085592-fe1f9c5ae1a1",
+            "1570205440321-a4061c476c7a",
+            "1705593349153-0e21c38c8ff2",
+        ],
     },
     {
         "id": "gym",
@@ -366,6 +396,7 @@ SLUG_PHOTO_OVERRIDES: dict[str, str] = {
     "cdc-issues-guidance-on-touching-grass-safely": "1506905925346-21bda4d32df4",
     "dot-requires-all-road-rage-to-be-submitted-in-writing": "1572595980019-acecd39bb149",
     "ios-27-release-date": "1512941937669-90a1b58e7e9c",
+    "dow-jones-industrial-average-surges-after-congress-passes-zo": "1729086923682-2e06130c53c1",
 }
 
 SLUG_OVERRIDES: dict[str, str] = {
@@ -417,6 +448,7 @@ SECTION_DEFAULTS: dict[str, str] = {
     "Culture": "museum",
     "Opinion": "office",
     "Strange America": "fair",
+    "Sports": "baseball",
     "News": "newsroom",
 }
 
