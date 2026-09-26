@@ -48,7 +48,6 @@ VERIFIED_PHOTO_IDS: frozenset[str] = frozenset(
         "1504711434969-e33886168f5c",
         "1565299624946-b28f40a0ae38",
         "1635070041078-e363dbe005cb",
-        "1507003211169-0a1dd7228f2d",
         "1521587760476-6c12a4b040da",
         "1541961017774-22349e4a1262",
         "1522071820081-009f0129c71c",
@@ -82,6 +81,13 @@ VERIFIED_PHOTO_IDS: frozenset[str] = frozenset(
 )
 
 FALLBACK_PHOTO = "1461988320302-91bde64fc8e4"
+
+# Stock portraits / faces we must never use on TAG (editorial ban).
+BANNED_PHOTO_IDS: frozenset[str] = frozenset(
+    {
+        "1507003211169-0a1dd7228f2d",  # smiling man portrait — was wrongly used on ghost-parking
+    }
+)
 
 IMAGE_TOPICS: list[dict[str, Any]] = [
     {
@@ -127,7 +133,7 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "ghost",
         "keywords": ["ghost", "ghosts", "haunt", "spooky", "sheet", "specter", "paranormal"],
-        "photos": ["1507003211169-0a1dd7228f2d", "1560472354-b33ff0c44a43"],
+        "photos": ["1560472354-b33ff0c44a43", "1570205440321-a4061c476c7a"],
     },
     {
         "id": "ufo",
@@ -330,7 +336,7 @@ IMAGE_TOPICS: list[dict[str, Any]] = [
     {
         "id": "weather",
         "keywords": ["weather", "rain", "drizzle", "forecast", "gray sky", "cloud", "window", "coffee cup"],
-        "photos": ["1507003211169-0a1dd7228f2d", "1560472354-b33ff0c44a43"],
+        "photos": ["1560472354-b33ff0c44a43", "1570205440321-a4061c476c7a"],
     },
     {
         "id": "library",
@@ -463,8 +469,17 @@ def _unsplash(photo_id: str, width: int, height: int) -> str:
 
 
 def _sanitize_photos(photos: list[str]) -> list[str]:
-    clean = [p for p in photos if p in VERIFIED_PHOTO_IDS]
+    clean = [p for p in photos if p in VERIFIED_PHOTO_IDS and p not in BANNED_PHOTO_IDS]
     return clean or [FALLBACK_PHOTO]
+
+
+def _prompt_uses_banned_photo(image_prompt: str) -> bool:
+    if not image_prompt:
+        return False
+    for banned in BANNED_PHOTO_IDS:
+        if banned in image_prompt:
+            return True
+    return False
 
 
 def _validate_topic_photos() -> None:
@@ -546,7 +561,7 @@ def _match_topic_photo(
     seed = f"{article_id}:{slug}"
 
     pinned_photo = SLUG_PHOTO_OVERRIDES.get(slug)
-    if pinned_photo and pinned_photo in VERIFIED_PHOTO_IDS:
+    if pinned_photo and pinned_photo in VERIFIED_PHOTO_IDS and pinned_photo not in BANNED_PHOTO_IDS:
         return _unsplash(pinned_photo, 800, 500), _unsplash(pinned_photo, 400, 300)
 
     override_id = SLUG_OVERRIDES.get(slug)
@@ -609,11 +624,14 @@ def pick_article_images(
     image_prompt: str = "",
 ) -> tuple[str, str]:
     """Return (hero_url, thumb_url) best matching the article concept."""
+    if _prompt_uses_banned_photo(image_prompt):
+        image_prompt = ""
+
     if image_prompt.startswith("http://") or image_prompt.startswith("https://"):
         local_from_prompt = _asset_url_from_prompt(image_prompt)
         if local_from_prompt:
             return local_from_prompt, local_from_prompt
-        if photo_url_reachable(image_prompt):
+        if photo_url_reachable(image_prompt) and not _prompt_uses_banned_photo(image_prompt):
             return image_prompt, image_prompt
 
     local_url = _local_asset_url(slug)
