@@ -25,6 +25,7 @@ if str(DESKTOP_AGENT) not in sys.path:
 from integrations.satire_vault_monitor import ID_RE, parse_frontmatter  # noqa: E402
 from integrations.vault_article_usage import (  # noqa: E402
     is_backlog_eligible,
+    owner_skip_story_reason,
     purge_vault_duplicates,
 )
 
@@ -437,6 +438,8 @@ def is_publishable_vault_article(path: Path) -> bool:
         return False
     meta = parse_frontmatter(text)
     if not str(meta.get("title") or "").strip():
+        return False
+    if owner_skip_story_reason(meta, slug=str(meta.get("slug") or path.stem)):
         return False
     body = extract_body(text)
     word_count = len(re.findall(r"\w+", body))
@@ -1721,7 +1724,7 @@ def article_catalog_entry(article: dict[str, Any]) -> dict[str, Any]:
     return entry
 
 
-def write_static_pages() -> None:
+def write_static_pages(catalog: list[dict[str, Any]]) -> None:
     pages = [
         (
             "about.html",
@@ -1800,6 +1803,7 @@ def write_static_pages() -> None:
             + chrome_footer(on_homepage=False, show_ads=show_ads),
             encoding="utf-8",
         )
+    catalog_json = json.dumps(catalog, ensure_ascii=False)
     search_path = SITE / "search.html"
     search_path.write_text(
         chrome_head(
@@ -1819,6 +1823,7 @@ def write_static_pages() -> None:
   <ol id="search-results" class="search-results"></ol>
 </main>
 """
+        + f'<script type="application/json" id="articles-data">{catalog_json}</script>\n'
         + chrome_footer(on_homepage=False, show_ads=False),
         encoding="utf-8",
     )
@@ -2001,7 +2006,7 @@ def build_site(
     )
     (SITE / "index.html").write_text(generate_index(ingested), encoding="utf-8")
     (SITE / "CNAME").write_text(f"{DOMAIN}\n", encoding="utf-8")
-    write_static_pages()
+    write_static_pages(catalog)
     write_section_pages(ingested)
     write_rss_feed(ingested)
     write_robots_txt()

@@ -924,6 +924,126 @@
 
 
 
+  var SEARCH_STOPWORDS = {
+
+    a: true,
+
+    an: true,
+
+    and: true,
+
+    are: true,
+
+    as: true,
+
+    at: true,
+
+    be: true,
+
+    by: true,
+
+    for: true,
+
+    from: true,
+
+    in: true,
+
+    into: true,
+
+    is: true,
+
+    it: true,
+
+    of: true,
+
+    on: true,
+
+    or: true,
+
+    that: true,
+
+    the: true,
+
+    this: true,
+
+    to: true,
+
+    was: true,
+
+    were: true,
+
+    with: true,
+
+  };
+
+
+
+  function meaningfulSearchTerms(query) {
+
+    var terms = searchTerms(query);
+
+    var filtered = terms.filter(function (term) {
+
+      return !SEARCH_STOPWORDS[term];
+
+    });
+
+    return filtered.length ? filtered : terms;
+
+  }
+
+
+
+  function termMatchesHaystack(hay, term) {
+
+    if (hay.includes(term)) {
+
+      return true;
+
+    }
+
+    if (term.length >= 5 && term.endsWith("ing")) {
+
+      var ingStem = term.slice(0, -3);
+
+      if (ingStem.length >= 3 && hay.includes(ingStem)) {
+
+        return true;
+
+      }
+
+    }
+
+    if (term.length >= 4 && term.endsWith("ed")) {
+
+      var edStem = term.slice(0, -2);
+
+      if (edStem.length >= 3 && hay.includes(edStem)) {
+
+        return true;
+
+      }
+
+    }
+
+    if (term.length >= 4 && term.endsWith("s") && !term.endsWith("ss")) {
+
+      var pluralStem = term.slice(0, -1);
+
+      if (pluralStem.length >= 3 && hay.includes(pluralStem)) {
+
+        return true;
+
+      }
+
+    }
+
+    return false;
+
+  }
+
+
+
   function articleHaystack(article) {
 
     return (
@@ -966,7 +1086,7 @@
 
     terms.forEach(function (term) {
 
-      if (!hay.includes(term)) {
+      if (!termMatchesHaystack(hay, term)) {
 
         return;
 
@@ -1016,7 +1136,7 @@
 
   function searchArticles(articles, query) {
 
-    const terms = searchTerms(query);
+    const terms = meaningfulSearchTerms(query);
 
     if (!terms.length) {
 
@@ -1172,6 +1292,18 @@
 
     fetchArticles().then(function (articles) {
 
+      if (!articles.length) {
+
+        statusEl.textContent =
+
+          "Could not load the story archive. Check your connection and refresh the page.";
+
+        resultsEl.innerHTML = "";
+
+        return;
+
+      }
+
       const results = searchArticles(articles, query);
 
       if (!results.length) {
@@ -1202,6 +1334,10 @@
 
   document.addEventListener("DOMContentLoaded", function () {
 
+    initSearchForms();
+
+    initSearchPage();
+
     initHouseAds();
 
     const articles = loadArticles();
@@ -1211,10 +1347,6 @@
     initTabs(articles);
 
     initNav();
-
-    initSearchForms();
-
-    initSearchPage();
 
   });
 

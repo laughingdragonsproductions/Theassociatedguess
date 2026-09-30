@@ -4,8 +4,15 @@
     <title>The Associated Guess</title>
     <link>https://theassociatedguess.com/</link>
     <description>Original parody news from The Associated Guess.</description>
-    <lastBuildDate>Sat, 26 Sep 2026 12:44:35 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 30 Sep 2026 23:04:39 +0000</lastBuildDate>
     <managingEditor>laughingdragonsproductions@gmail.com (The Associated Guess)</managingEditor>
+    <item>
+      <title>Microsoft Releases New Operating System That Promises to Make Bureaucrats Even More Efficient</title>
+      <link>https://theassociatedguess.com/article/microsoft-releases-new-operating-system-that-promises-to-mak/</link>
+      <guid isPermaLink="true">https://theassociatedguess.com/article/microsoft-releases-new-operating-system-that-promises-to-mak/</guid>
+      <pubDate>2026-09-30</pubDate>
+      <description>Windows 11B: Now with less need for coffee and more red tape!</description>
+    </item>
     <item>
       <title>Louisville Proclaims Sept. 25 Dolly Parton 9 to 5 Day With Science Center Screening and Pink Bridge Lighting</title>
       <link>https://theassociatedguess.com/article/louisville-proclaims-dolly-parton-9-to-5-day/</link>
@@ -208,13 +215,6 @@
       <guid isPermaLink="true">https://theassociatedguess.com/article/museum-opens-exhibit-on-passwords-you-will-never-remember/</guid>
       <pubDate>2026-08-19</pubDate>
       <description>Curators say collection spans &#x27;childhood pet names&#x27; through &#x27;corporate SSO hellscape.</description>
-    </item>
-    <item>
-      <title>State Fair Adds Competitive Overthinking Category</title>
-      <link>https://theassociatedguess.com/article/state-fair-adds-competitive-overthinking-category/</link>
-      <guid isPermaLink="true">https://theassociatedguess.com/article/state-fair-adds-competitive-overthinking-category/</guid>
-      <pubDate>2026-08-19</pubDate>
-      <description>Judges score participants on loops per minute and quality of imaginary arguments in the shower.</description>
     </item>
   </channel>
 </rss>
