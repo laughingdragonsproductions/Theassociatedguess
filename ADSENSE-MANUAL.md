@@ -2,7 +2,7 @@
 
 Publisher ID: **ca-pub-7048606415692002** (shared with Laughing Dragons portfolio).
 
-**Authoritative matrix:** [../ADSENSE-READINESS-MATRIX.md](../ADSENSE-READINESS-MATRIX.md) — portfolio master (also on Desktop)
+**Authoritative matrix:** [../ADSENSE-READINESS-MATRIX-V2.md](../ADSENSE-READINESS-MATRIX-V2.md) (V2). V1: [ADSENSE-READINESS-MATRIX.md](../ADSENSE-READINESS-MATRIX.md)
 
 **Automated check:** `powershell -File G:\LocalAIagent\desktop-agent\scripts\check-adsense-readiness.ps1 -Site tag`  
 State file: `G:\openclaw\business\jarvis\state\adsense-readiness.json`
