@@ -4,8 +4,15 @@
     <title>The Associated Guess</title>
     <link>https://theassociatedguess.com/</link>
     <description>Original parody news from The Associated Guess.</description>
-    <lastBuildDate>Sat, 17 Oct 2026 15:50:51 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 20 Oct 2026 04:57:04 +0000</lastBuildDate>
     <managingEditor>laughingdragonsproductions@gmail.com (The Associated Guess)</managingEditor>
+    <item>
+      <title>Breaking Bad Actor Breaks Bad Again by Accidentally Killing a Cow</title>
+      <link>https://theassociatedguess.com/article/breaking-bad-actor-breaks-bad-again-by-accidentally-killing/</link>
+      <guid isPermaLink="true">https://theassociatedguess.com/article/breaking-bad-actor-breaks-bad-again-by-accidentally-killing/</guid>
+      <pubDate>2026-10-20</pubDate>
+      <description>Local Resident Reports Unfortunate Incident Involving Bryan Cranston’s Real Life and a Cattle Farm.</description>
+    </item>
     <item>
       <title>Netflix Releases New Holiday Special Featuring Santa’s Secret Formula for Milk and Cookies</title>
       <link>https://theassociatedguess.com/article/netflix-releases-new-holiday-special-featuring-santa-s-secre/</link>
@@ -208,13 +215,6 @@
       <guid isPermaLink="true">https://theassociatedguess.com/article/airline-introduces-basic-economy-plus-regret/</guid>
       <pubDate>2026-08-19</pubDate>
       <description>New tier includes seat, bag, and a complimentary moment realizing you saved twelve dollars.</description>
-    </item>
-    <item>
-      <title>Town Declares War on Decorative Gourds</title>
-      <link>https://theassociatedguess.com/article/town-declares-war-on-decorative-gourds/</link>
-      <guid isPermaLink="true">https://theassociatedguess.com/article/town-declares-war-on-decorative-gourds/</guid>
-      <pubDate>2026-08-19</pubDate>
-      <description>Council cites &#x27;autumn creep&#x27; after pumpkin appears in store aisle on August 3.</description>
     </item>
   </channel>
 </rss>
