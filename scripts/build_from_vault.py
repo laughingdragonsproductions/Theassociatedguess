@@ -735,6 +735,11 @@ WORKFLOW_LINE_RE = re.compile(r"^\s*\*\*(Setup|Punchline|Scene|Beat):?\*\*", re.
 LEGACY_PLACEHOLDER_SLUG_RE = re.compile(r"^article-\d+$", re.I)
 PLACEHOLDER_TITLE_RE = re.compile(r"^article\s*\d+$", re.I)
 
+# ~70% Lit Printz on owned promo slots; remainder split across portfolio hub + THEM 1947.
+HOUSE_AD_LITPRINTZ_WEIGHT = 70
+HOUSE_AD_HUB_WEIGHT = 15
+HOUSE_AD_THEM1947_WEIGHT = 15
+
 HOUSE_ADS: list[dict[str, str]] = [
     {
         "id": "hub",
@@ -811,8 +816,14 @@ def write_article_redirects() -> None:
 
 
 def pick_house_ad(slot: int, slug: str) -> dict[str, str]:
+    by_id = {ad["id"]: ad for ad in HOUSE_ADS}
     seed = sum(ord(c) for c in (slug or "story")) + slot * 31
-    return HOUSE_ADS[seed % len(HOUSE_ADS)]
+    roll = seed % 100
+    if roll < HOUSE_AD_LITPRINTZ_WEIGHT:
+        return by_id["litprintz"]
+    if roll < HOUSE_AD_LITPRINTZ_WEIGHT + HOUSE_AD_HUB_WEIGHT:
+        return by_id["hub"]
+    return by_id["them1947"]
 
 
 def house_ad_inner(ad: dict[str, str]) -> str:
