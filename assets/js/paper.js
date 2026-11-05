@@ -776,6 +776,92 @@
 
 
 
+  function houseAdWeights() {
+
+    const cfg = window.SITE_CONFIG || {};
+
+    const w = cfg.houseAdWeights || {};
+
+    return {
+
+      litprintz: Number(w.litprintz) >= 0 ? Number(w.litprintz) : 70,
+
+      hub: Number(w.hub) >= 0 ? Number(w.hub) : 15,
+
+      them1947: Number(w.them1947) >= 0 ? Number(w.them1947) : 15,
+
+    };
+
+  }
+
+
+
+  function pickHouseAd(ads) {
+
+    const byId = {};
+
+    ads.forEach(function (ad) {
+
+      if (ad && ad.id) {
+
+        byId[ad.id] = ad;
+
+      }
+
+    });
+
+    const weights = houseAdWeights();
+
+    const order = ["litprintz", "hub", "them1947"];
+
+    let total = 0;
+
+    order.forEach(function (id) {
+
+      if (byId[id]) {
+
+        total += weights[id] || 0;
+
+      }
+
+    });
+
+    if (!total) {
+
+      return ads[Math.floor(Math.random() * ads.length)];
+
+    }
+
+    let roll = Math.random() * total;
+
+    for (let i = 0; i < order.length; i += 1) {
+
+      const id = order[i];
+
+      const ad = byId[id];
+
+      if (!ad) {
+
+        continue;
+
+      }
+
+      roll -= weights[id] || 0;
+
+      if (roll <= 0) {
+
+        return ad;
+
+      }
+
+    }
+
+    return byId.litprintz || ads[0];
+
+  }
+
+
+
   function initHouseAds() {
 
     const catalogEl = document.getElementById("house-ads-data");
@@ -818,19 +904,9 @@
 
     }
 
-    const pool = shuffle(ads.slice());
+    blocks.forEach(function (block) {
 
-    blocks.forEach(function (block, index) {
-
-      let adIndex = index % pool.length;
-
-      if (blocks.length > 1 && pool.length > 1 && adIndex === 0 && index > 0) {
-
-        adIndex = 1;
-
-      }
-
-      const ad = pool[adIndex];
+      const ad = pickHouseAd(ads);
 
       block.innerHTML = renderHouseAdInner(ad);
 

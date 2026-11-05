@@ -21,7 +21,12 @@ window.SITE_CONFIG = {
       inContent: "7102817128",
     },
   },
-  /** One header + one footer promo per article (build_from_vault.py). */
+  /** Owned promo rotation (~70% Lit Printz); see pickHouseAd in paper.js + build_from_vault.py. */
+  houseAdWeights: {
+    litprintz: 70,
+    hub: 15,
+    them1947: 15,
+  },
   houseAds: [
     {
       id: "hub",
