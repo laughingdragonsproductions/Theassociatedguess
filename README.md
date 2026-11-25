@@ -10,6 +10,13 @@ Static satire newspaper site. Content is generated from the OpenClaw vault at `G
 py -3 scripts/build_from_vault.py
 ```
 
+Each build (and `scripts/push-update.ps1` after a git push) syncs the Herald Facebook pool and queues **new** live articles for `Publish-FacebookPost.ps1` (TAG account). Requires Chrome social debug for the-associated-guess profile.
+
+```powershell
+py -3 G:\LocalAIagent\desktop-agent\integrations\tag_facebook_pipeline.py --full
+py -3 G:\LocalAIagent\desktop-agent\integrations\tag_facebook_pipeline.py --slug your-article-slug
+```
+
 After verifying the site locally, archive vault files that are now on the site:
 
 ```powershell

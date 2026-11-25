@@ -18,3 +18,9 @@ if (-not (git diff --cached --quiet)) {
 } else {
     Write-Host "Nothing to commit."
 }
+
+$tagFbPipeline = "G:\LocalAIagent\desktop-agent\integrations\tag_facebook_pipeline.py"
+if (Test-Path $tagFbPipeline) {
+    Write-Host "Syncing TAG Facebook posts pool and queueing missing articles..."
+    & py -3 $tagFbPipeline --full --max-age-days 60
+}

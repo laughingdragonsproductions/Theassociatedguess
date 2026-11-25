@@ -2113,6 +2113,15 @@ def main() -> None:
         publish_one=args.publish_one,
         publish_path=args.publish_path,
     )
+    if not args.archive_used:
+        try:
+            from integrations.tag_facebook_after_publish import queue_tag_facebook_after_site_build
+
+            result["tag_facebook_pipeline"] = queue_tag_facebook_after_site_build(
+                published_one=result.get("published_one"),
+            )
+        except Exception as exc:  # noqa: BLE001
+            result["tag_facebook_pipeline_error"] = str(exc)[:300]
     print(json.dumps(result, indent=2))
 
 
