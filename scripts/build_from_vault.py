@@ -75,6 +75,11 @@ BYLINE_BIOS: dict[str, str] = {
 BRAND = "The Associated Guess"
 TAGLINE = "SERIOUS NEWS. ABSURD WORLD."
 DOMAIN = "theassociatedguess.com"
+# Default social preview when no article hero is available (neutral wire-desk photo, not house ads).
+DEFAULT_OG_IMAGE = (
+    "https://images.unsplash.com/photo-1504711434969-e33886168f5c"
+    "?auto=format&fit=crop&w=1200&h=630&q=80"
+)
 ADSENSE_PUBLISHER = "ca-pub-7048606415692002"
 CONTACT_EMAIL = "laughingdragonsproductions@gmail.com"
 LEGAL_NAME = "Laughing Dragons Productions"
@@ -1028,6 +1033,14 @@ def social_meta_tags(
                 f'  <meta name="twitter:image" content="{escape(image)}" />',
             ]
         )
+    else:
+        tags.extend(
+            [
+                f'  <meta name="twitter:card" content="summary" />',
+                f'  <meta name="twitter:title" content="{escape(title)}" />',
+                f'  <meta name="twitter:description" content="{escape(meta_desc)}" />',
+            ]
+        )
     return "\n".join(tags) + "\n"
 
 
@@ -1369,6 +1382,25 @@ def pick_homepage_featured(
     return ranked[:limit]
 
 
+def absolute_share_url(path: str) -> str:
+    """Absolute HTTPS URL for Open Graph / Twitter cards."""
+    raw = (path or "").strip()
+    if not raw:
+        return DEFAULT_OG_IMAGE
+    if raw.startswith("http://") or raw.startswith("https://"):
+        return raw
+    return f"https://{DOMAIN}/{raw.lstrip('/')}"
+
+
+def default_share_image(articles: list[dict[str, Any]] | None = None) -> str:
+    """Share preview image for site pages — never a Lit Printz house-ad URL."""
+    if articles:
+        lead = pick_homepage_featured(articles, limit=1)
+        if lead and lead[0].get("hero_image"):
+            return absolute_share_url(str(lead[0]["hero_image"]))
+    return DEFAULT_OG_IMAGE
+
+
 def featured_badge(article: dict[str, Any], today_iso: str) -> str:
     if article.get("featured"):
         return '<span class="featured-badge">Featured</span>'
@@ -1550,12 +1582,14 @@ def generate_index(articles: list[dict[str, Any]]) -> str:
         ensure_ascii=False,
     )
 
+    share_image = default_share_image(articles)
     return (
         chrome_head(
             "Home",
             description=f"Original parody news from {BRAND}, published by {LEGAL_NAME}. Fictional stories in a straight news format — see Editorial Standards.",
-            canonical_path="",
+            canonical_path="index.html",
             body_class="page-home",
+            og_image=share_image,
             json_ld=org_json_ld(),
         )
         + chrome_header(on_homepage=True)
@@ -1671,7 +1705,7 @@ def generate_article_page(article: dict[str, Any], all_articles: list[dict[str, 
             description=article["dek"],
             canonical_path=f"article/{article['slug']}/",
             body_class="page-article",
-            og_image=article["hero_image"],
+            og_image=absolute_share_url(str(article.get("hero_image") or "")),
             og_type="article",
             robots_noindex=not article.get("indexable", True),
             json_ld=article_json_ld(article),
@@ -1794,6 +1828,7 @@ def write_static_pages(catalog: list[dict[str, Any]]) -> None:
             "reprints.html",
         ),
     ]
+    site_share = default_share_image(catalog)
     for name, title, body, description, canonical in pages:
         path = SITE / name
         show_ads = name not in {"privacy.html", "terms.html", "editorial-standards.html", "corrections.html"}
@@ -1807,6 +1842,7 @@ def write_static_pages(catalog: list[dict[str, Any]]) -> None:
                 description=description,
                 canonical_path=canonical,
                 body_class="page-static",
+                og_image=site_share,
                 include_adsense_script=show_ads,
             )
             + chrome_header(on_homepage=False, show_ads=show_ads)
@@ -1821,6 +1857,7 @@ def write_static_pages(catalog: list[dict[str, Any]]) -> None:
             "Search",
             description=f"Search the {BRAND} archive of satirical news stories.",
             canonical_path="search.html",
+            og_image=site_share,
             include_adsense_script=False,
         )
         + chrome_header(on_homepage=False, show_ads=False)
@@ -1868,6 +1905,9 @@ def write_section_pages(articles: list[dict[str, Any]]) -> None:
 {archive_html}
 """
         path = section_dir / f"{slug}.html"
+        section_share = absolute_share_url(
+            str(sec_articles[0].get("hero_image") or "") if sec_articles else ""
+        ) or default_share_image(articles)
         path.write_text(
             chrome_head(
                 section,
@@ -1875,6 +1915,7 @@ def write_section_pages(articles: list[dict[str, Any]]) -> None:
                 description=f"{section} coverage from {BRAND} — original parody news.",
                 canonical_path=f"section/{slug}.html",
                 body_class="page-section",
+                og_image=section_share,
             )
             + chrome_header(section, depth=1, on_homepage=False)
             + f"<main class='page-section'>{header_ad_markup()}<h1>{escape(section)}</h1>{body}</main>"
