@@ -2,6 +2,51 @@
   "brand": "The Associated Guess",
   "articles": [
     {
+      "id": "dr-4742",
+      "slug": "ghost-in-the-greenroom-litprintz-laughing-dragons",
+      "title": "Laughing Dragons Productions and The Lit Hippie Release Ghost in the Greenroom",
+      "dek": "Vinny Vincent posted the music video Wednesday on the LitPrintz YouTube channel and credited the studio for helping finish a project the two announced when their storefronts combined earlier this year.",
+      "section": "Culture",
+      "byline": "Brandon Sparks",
+      "dateline": "",
+      "promo": "none",
+      "promo_url": "",
+      "read_minutes": 5,
+      "word_count": 986,
+      "indexable": true,
+      "hero_image": "https://theassociatedguess.com/assets/images/ghost-in-the-greenroom-litprintz-laughing-dragons.jpg",
+      "thumb_image": "https://theassociatedguess.com/assets/images/ghost-in-the-greenroom-litprintz-laughing-dragons.jpg",
+      "image_prompt": "https://theassociatedguess.com/assets/images/ghost-in-the-greenroom-litprintz-laughing-dragons.jpg",
+      "published": "2026-11-26",
+      "featured": false,
+      "trending": true,
+      "quick_links": [
+        [
+          "Watch Ghost in the Greenroom",
+          "https://www.youtube.com/watch?v=_AtoU7ZwcNg"
+        ],
+        [
+          "LitPrintz on YouTube",
+          "https://www.youtube.com/@thelithippie42o"
+        ],
+        [
+          "Lit Printz shop",
+          "https://litprintz.com"
+        ],
+        [
+          "Laughing Dragons Productions",
+          "https://laughing-dragons.com"
+        ],
+        [
+          "Studio shop page",
+          "https://laughing-dragons.com/shop/"
+        ]
+      ],
+      "display_date": "2026-11-26",
+      "display_date_long": "Thursday, November 26, 2026",
+      "search_text": "Laughing Dragons Productions and The Lit Hippie Release Ghost in the Greenroom Vinny Vincent posted the music video Wednesday on the LitPrintz YouTube channel and credited the studio for helping finish a project the two announced when their storefronts combined earlier this year. Culture Brandon Sparks  ghost in the greenroom litprintz laughing dragons Vinny Vincent and Laughing Dragons Productions have a new music video out. \"Ghost in the Greenroom\" went up Wednesday, November 25, on the LitPrintz channel on YouTube. Vincent records as The Lit Hippie and owns Lit Printz, the print shop that now carries the Laughing Dragons store. The description under the video credits the studio with helping bring the piece to the screen.\n\n\"Huge shoutout to Laughing Dragon Productions for helping bring this vision to life,\" the post says, using a shortened f"
+    },
+    {
       "id": "dr-1579402187",
       "slug": "nvidia-ceo-returns-to-daily-affairs-after-brief-period-of-being-market",
       "title": "Nvidia CEO Gets Back to Daily Affairs; Company Clarifies Wording Was Calendar-Related",
